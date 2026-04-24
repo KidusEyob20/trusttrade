@@ -187,7 +187,6 @@
       <div class="nav-label">System</div>
       <div class="nav-item active"><span class="nav-icon">⬡</span> Block Explorer</div>
       <div class="nav-item" onclick="window.location.href='agents.html'"><span class="nav-icon">⚙</span> AI Agents</div>
-      <div class="nav-item" onclick="window.location.href='profile.html'"><span class="nav-icon">👤</span> Profile</div>
     </div>
     <div class="sidebar-footer">
           <div id="sidebar-user-badge" style="padding:12px 16px 0;margin-bottom:10px;">
@@ -197,7 +196,7 @@
           <div class="suf-name" style="font-size:12px;font-weight:600;color:#e8edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
           <div class="suf-role" style="font-size:9px;color:#4a5668;font-family:'Space Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
         </div>
-        <div title="Sign out" onclick="TrustAuth.logoutUser()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+        <div title="Sign out" onclick="TrustAuth.logout()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
       </div>
     </div>
     <div style="margin-bottom:10px;">
@@ -681,43 +680,20 @@ setInterval(() => {
   // ── Auth guard ──────────────────────────────────────────────────────────
   TrustAuth.requireAuth();
 
-  // ── Role-based UI setup ─────────────────────────────────────────────────
+  // ── Populate sidebar user badge ─────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
-    const user = TrustAuth.currentUser();
-    if (!user) return;
-
-    // Populate sidebar user badge
-    const badgeEl = document.getElementById('sidebar-user-badge');
-    if (badgeEl) {
-      badgeEl.querySelector('.suf-avatar').textContent = user.avatar || user.name.slice(0,2).toUpperCase();
-      badgeEl.querySelector('.suf-name').textContent = user.name;
-      badgeEl.querySelector('.suf-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1) + ' · ' + user.company;
-    }
-
-    // Apply role-based visibility
-    applyRoleBasedVisibility(user);
+    const u = TrustAuth.currentUser();
+    if (!u) return;
+    const el = document.getElementById('sidebar-user-badge');
+    if (!el) return;
+    el.querySelector('.suf-avatar').textContent  = u.avatar || u.name.slice(0,2).toUpperCase();
+    el.querySelector('.suf-name').textContent    = u.name;
+    el.querySelector('.suf-role').textContent    = u.role + ' · ' + u.company;
   });
-
-  function applyRoleBasedVisibility(user) {
-    // Navigation items visibility
-    const navItems = {
-      'nav-agents': document.querySelector('.nav-item[onclick*="agents.html"]'),
-      'nav-flagged': document.querySelector('.nav-item[onclick*="flagged.html"]'),
-      'create-trade-btn': document.querySelector('.nav-item[onclick*="submit.html"]'),
-      'explorer-link': document.querySelector('.nav-item[onclick*="explorer.html"]'),
-      'profile-link': document.querySelector('.nav-item[onclick*="profile.html"]')
-    };
-
-    Object.entries(navItems).forEach(([id, element]) => {
-      if (element && !TrustAuth.shouldShowComponent(id, user)) {
-        element.style.display = 'none';
-      }
-    });
-  }
 
   async function connectWallet() {
     const ok = await TrustChain.connect();
-    document.getElementById('wallet-status').textContent =
+    document.getElementById('wallet-status').textContent = 
       ok ? '✅ Connected to Base Sepolia' : '❌ Wrong network or no wallet';
   }
 </script>

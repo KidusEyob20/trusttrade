@@ -371,12 +371,12 @@
     <div class="step-panel" id="panel-2">
       <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Select your role in the supply chain. This determines your default permissions.</div>
       <div class="role-grid">
-        <div class="role-card" id="role-manufacturer" onclick="selectRole('manufacturer')">
+        <div class="role-card" id="role-Manufacturer" onclick="selectRole('Manufacturer')">
           <div class="role-icon">🏭</div>
           <div class="role-name">Manufacturer</div>
           <div class="role-desc">Submit trades, receive escrow</div>
         </div>
-        <div class="role-card" id="role-buyer" onclick="selectRole('buyer')">
+        <div class="role-card" id="role-Buyer" onclick="selectRole('Buyer')">
           <div class="role-icon">🛒</div>
           <div class="role-name">Buyer</div>
           <div class="role-desc">Deposit escrow, approve trades</div>
@@ -513,27 +513,27 @@
     btn.disabled = true;
     btn.textContent = 'Creating account…';
 
-    const name    = (document.getElementById('inp-first').value.trim() + ' ' + document.getElementById('inp-last').value.trim()).trim();
-    const email   = document.getElementById('inp-email').value.trim();
-    const company = document.getElementById('inp-company').value.trim();
-    const pw      = document.getElementById('inp-password').value;
+    setTimeout(() => {
+      const name    = (document.getElementById('inp-first').value.trim() + ' ' + document.getElementById('inp-last').value.trim()).trim();
+      const email   = document.getElementById('inp-email').value.trim();
+      const company = document.getElementById('inp-company').value.trim();
+      const pw      = document.getElementById('inp-password').value;
 
-    // Use new auth system
-    TrustAuth.registerUser({ name, email, company, role: selectedRole, password: pw })
-      .then(user => {
-        document.getElementById('s-name').textContent    = user.name;
-        document.getElementById('s-email').textContent   = user.email;
-        document.getElementById('s-company').textContent = user.company;
-        document.getElementById('s-role').textContent    = user.role;
+      const result = TrustAuth.register({ name, email, company, role: selectedRole, password: pw });
+      if (result.ok) {
+        document.getElementById('s-name').textContent    = result.user.name;
+        document.getElementById('s-email').textContent   = result.user.email;
+        document.getElementById('s-company').textContent = result.user.company;
+        document.getElementById('s-role').textContent    = result.user.role;
         setStep(3);
         setTimeout(() => { window.location.href = 'index.html'; }, 3000);
-      })
-      .catch(error => {
-        showError(error.message);
+      } else {
+        showError(result.error);
         btn.disabled = false;
         btn.textContent = 'Create Account →';
         setStep(1);
-      });
+      }
+    }, 700);
   }
 </script>
 </body>
