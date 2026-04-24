@@ -1,5 +1,5 @@
 /**
- * TrustTrade — Auth System v1.0
+ * TrustTrade — Auth System v1.1
  * Handles user registration, login, session management.
  * Stored entirely in localStorage for demo purposes.
  */
@@ -9,6 +9,12 @@ const TrustAuth = (() => {
   const USERS_KEY   = 'tt_users';
   const SESSION_KEY = 'tt_session';
 
+  const USER_ROLES = {
+    MANUFACTURER: 'Manufacturer',
+    BUYER: 'Buyer',
+    GUEST: 'Guest'
+  };
+
   // ── Demo seed accounts ────────────────────────────────────────────────────
   const SEED_USERS = [
     {
@@ -16,7 +22,7 @@ const TrustAuth = (() => {
       name: 'Alex Chen',
       email: 'alex@shenzhen-mfg.com',
       company: 'Shenzhen MFG',
-      role: 'Manufacturer',
+      role: USER_ROLES.MANUFACTURER,
       password: 'demo1234',
       avatar: 'AC',
       createdAt: '2026-01-15',
@@ -26,11 +32,21 @@ const TrustAuth = (() => {
       name: 'Sarah Williams',
       email: 'sarah@dubai-dist.com',
       company: 'Dubai Dist.',
-      role: 'Buyer',
+      role: USER_ROLES.BUYER,
       password: 'demo1234',
       avatar: 'SW',
       createdAt: '2026-01-20',
     },
+    {
+      id: 'usr_003',
+      name: 'Demo Manufacturer',
+      email: 'demo@manufacturer.com',
+      company: 'Demo Manufacturing Co.',
+      role: USER_ROLES.MANUFACTURER,
+      password: 'demo1234',
+      avatar: 'DM',
+      createdAt: '2026-01-01',
+    }
   ];
 
   // ── Storage helpers ───────────────────────────────────────────────────────
@@ -44,12 +60,38 @@ const TrustAuth = (() => {
   const saveSession = (u) => localStorage.setItem(SESSION_KEY, JSON.stringify(u));
   const clearSession = () => localStorage.removeItem(SESSION_KEY);
 
+  const safeUser = (user) => {
+    if (!user) return null;
+    const { password, ...safe } = user;
+    return safe;
+  };
+
   // Seed demo users once
   const init = () => {
     if (getUsers().length === 0) saveUsers(SEED_USERS);
   };
 
-  // ── Public API ────────────────────────────────────────────────────────────
+  const findUser = (email, password) => {
+    const users = getUsers();
+    return users.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+  };
+
+  const login = (email, password) => {
+    const user = findUser(email, password);
+    if (!user) return { ok: false, error: 'Invalid email or password.' };
+    const safe = safeUser(user);
+    saveSession(safe);
+    return { ok: true, user: safe };
+  };
+
+  const loginUser = (email, password) => new Promise((resolve, reject) => {
+    const result = login(email, password);
+    if (result.ok) resolve(result.user);
+    else reject(new Error(result.error));
+  });
+
   const register = ({ name, email, company, role, password }) => {
     const users = getUsers();
     if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
@@ -61,27 +103,22 @@ const TrustAuth = (() => {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       company: company.trim(),
-      role,
+      role: role || USER_ROLES.BUYER,
       password,
       avatar: initials,
       createdAt: new Date().toISOString().split('T')[0],
     };
     users.push(user);
     saveUsers(users);
-    const { password: _, ...safe } = user;
+    const safe = safeUser(user);
     saveSession(safe);
     return { ok: true, user: safe };
   };
 
-  const login = (email, password) => {
-    const users = getUsers();
-    const user = users.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-    if (!user) return { ok: false, error: 'Invalid email or password.' };
-    const { password: _, ...safe } = user;
-    saveSession(safe);
-    return { ok: true, user: safe };
+  const registerUser = async ({ name, email, company, role, password }) => {
+    const result = register({ name, email, company, role, password });
+    if (!result.ok) throw new Error(result.error);
+    return result.user;
   };
 
   const logout = () => {
@@ -89,9 +126,13 @@ const TrustAuth = (() => {
     window.location.href = 'login.html';
   };
 
+  const logoutUser = async () => {
+    logout();
+    return Promise.resolve();
+  };
+
   const currentUser = () => getSession();
 
-  // Guard: redirect to login if not authenticated
   const requireAuth = () => {
     if (!getSession()) {
       window.location.href = 'login.html';
@@ -101,5 +142,16 @@ const TrustAuth = (() => {
   };
 
   init();
-  return { register, login, logout, currentUser, requireAuth };
+
+  return {
+    USER_ROLES,
+    register,
+    login,
+    logout,
+    currentUser,
+    requireAuth,
+    registerUser,
+    loginUser,
+    logoutUser,
+  };
 })();

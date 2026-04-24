@@ -467,6 +467,14 @@
     <div class="divider">or sign in with a demo account</div>
 
     <div class="demo-accounts">
+      <div class="demo-account" onclick="fillDemo('demo@manufacturer.com','demo1234')">
+        <div class="demo-avatar">DM</div>
+        <div class="demo-info">
+          <div class="demo-name">Demo Manufacturer</div>
+          <div class="demo-email">demo@manufacturer.com · Demo Manufacturing Co.</div>
+        </div>
+        <div class="demo-role-badge">Manufacturer</div>
+      </div>
       <div class="demo-account" onclick="fillDemo('alex@shenzhen-mfg.com','demo1234')">
         <div class="demo-avatar">AC</div>
         <div class="demo-info">
@@ -527,18 +535,17 @@
     btn.disabled = true;
     btn.textContent = 'Signing in…';
 
-    setTimeout(() => {
-      const result = TrustAuth.login(email, pass);
-      if (result.ok) {
+    TrustAuth.loginUser(email, pass)
+      .then(() => {
         btn.textContent = '✓ Authenticated';
         setTimeout(() => { window.location.href = 'index.html'; }, 400);
-      } else {
-        errEl.textContent = '⚠ ' + result.error;
+      })
+      .catch(error => {
+        errEl.textContent = '⚠ ' + error.message;
         errEl.classList.add('show');
         btn.disabled = false;
         btn.textContent = 'Sign In →';
-      }
-    }, 600);
+      });
   }
 
   // Enter key support
