@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Flagged Trades — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#090d12;--bg2:#0e1420;--bg3:#131b26;--bg4:#1a2333;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#e8edf5;--text2:#7a8a9e;--text3:#4a5668;--accent:#00d4aa;--accent2:#0099ff;--danger:#ff4d6a;--warn:#ffaa00;--green:#00d4aa;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,77,106,0.008) 1px,transparent 1px),linear-gradient(90deg,rgba(255,77,106,0.008) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(255,77,106,0.05);top:-100px;right:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(255,170,0,0.04);bottom:-100px;left:-80px;}
+  .shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .logo-mark{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+  .nav-section{padding:0 12px;margin-bottom:24px;}
+  .nav-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:0 8px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all 0.15s;border:1px solid transparent;margin-bottom:2px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(255,77,106,0.08);border-color:rgba(255,77,106,0.2);color:var(--danger);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+  .chain-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .chain-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);box-shadow:0 0 8px var(--danger);animation:pulse 1.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+  .main{flex:1;padding:32px 36px;overflow-y:auto;}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:var(--sans);}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{background:var(--bg3);color:var(--text);}
+  .btn-danger{background:rgba(255,77,106,0.15);border:1px solid rgba(255,77,106,0.3);color:var(--danger);}
+  .btn-danger:hover{background:rgba(255,77,106,0.25);}
+
+  /* Alert banner */
+  .alert-banner{background:rgba(255,77,106,0.07);border:1px solid rgba(255,77,106,0.2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+  .alert-icon{font-size:20px;}
+  .alert-text{flex:1;}
+  .alert-title{font-size:13px;font-weight:600;color:var(--danger);margin-bottom:2px;}
+  .alert-sub{font-size:12px;color:var(--text2);}
+
+  /* Flag cards */
+  .flag-card{background:var(--bg2);border:1px solid rgba(255,77,106,0.15);border-radius:14px;overflow:hidden;margin-bottom:20px;transition:border-color 0.2s;}
+  .flag-card:hover{border-color:rgba(255,77,106,0.3);}
+  .fc-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+  .fc-id{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:4px;}
+  .fc-product{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;}
+  .fc-parties{display:flex;align-items:center;gap:8px;}
+  .party-chip{padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text2);font-family:var(--mono);}
+  .fc-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  .escrow-locked{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--warn);}
+  .escrow-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-family:var(--mono);font-weight:700;}
+  .badge-flagged{background:rgba(255,77,106,0.1);color:var(--danger);border:1px solid rgba(255,77,106,0.2);}
+  .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+  /* Flag reasons */
+  .fc-body{padding:18px 20px;}
+  .reasons-title{font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;}
+  .reasons-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+  .reason-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(255,77,106,0.05);border:1px solid rgba(255,77,106,0.12);border-radius:8px;}
+  .ri-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+  .ri-text{flex:1;}
+  .ri-title{font-size:12px;font-weight:600;color:var(--danger);margin-bottom:2px;}
+  .ri-detail{font-size:11px;color:var(--text2);font-family:var(--mono);}
+  .ri-agent{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;}
+
+  /* Agent comparison */
+  .agents-mini{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+  .am-card{background:var(--bg3);border-radius:8px;padding:12px 14px;border:1px solid var(--border);}
+  .am-card.fail{border-color:rgba(255,77,106,0.2);}
+  .am-card.pass{border-color:rgba(0,212,170,0.2);}
+  .am-name{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .am-result{font-family:var(--mono);font-size:13px;font-weight:700;}
+  .r-pass{color:var(--green);}
+  .r-fail{color:var(--danger);}
+  .am-detail{font-size:10px;color:var(--text2);font-family:var(--mono);margin-top:3px;}
+
+  /* Actions row */
+  .fc-actions{display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--border);}
+
+  /* Resolution log */
+  .resolution-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .rp-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);}
+  .rp-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+  .rlog-item{display:flex;gap:12px;align-items:flex-start;}
+  .rlog-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+  .rlog-content{flex:1;}
+  .rlog-title{font-size:12px;color:var(--text);margin-bottom:2px;}
+  .rlog-detail{font-size:11px;color:var(--text2);font-family:var(--mono);}
+  .rlog-time{font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;}
+
+  /* Empty state */
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+  .empty-icon{font-size:40px;margin-bottom:14px;}
+  .empty-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px;}
+  .empty-sub{font-size:12px;font-family:var(--mono);}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn 0.35s ease both;}
+  .fade-in-2{animation-delay:0.08s}
+  .fade-in-3{animation-delay:0.14s}
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" onclick="window.location.href='index.html'">TrustTrade</div>
+      <div class="logo-sub">v0.1 · Base Testnet</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">◈</span> Dashboard</div>
+      <div class="nav-item" onclick="window.location.href='trades.html'"><span class="nav-icon">⬡</span> All Trades</div>
+      <div class="nav-item active"><span class="nav-icon">⚑</span> Flagged<span id="nav-flag-count" style="margin-left:auto;background:rgba(255,77,106,0.15);color:var(--danger);font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:10px;">2</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Actions</div>
+
+      <div class="nav-item" onclick="window.location.href='submit.html'"><span class="nav-icon">＋</span> Create Trade</div>
+      <div class="nav-item" onclick="window.location.href='escrow.html'"><span class="nav-icon">◎</span> Deposit Escrow</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="window.location.href='explorer.html'"><span class="nav-icon">⬡</span> Block Explorer</div>
+      <div class="nav-item" onclick="window.location.href='agents.html'"><span class="nav-icon">⚙</span> AI Agents</div>
+      <div class="nav-item" onclick="window.location.href='profile.html'"><span class="nav-icon">👤</span> Profile</div>
+    </div>
+    <div class="sidebar-footer">
+          <div id="sidebar-user-badge" style="padding:12px 16px 0;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131b26;border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:default;">
+        <div class="suf-avatar" style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#00d4aa;flex-shrink:0;">??</div>
+        <div style="flex:1;min-width:0;">
+          <div class="suf-name" style="font-size:12px;font-weight:600;color:#e8edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
+          <div class="suf-role" style="font-size:9px;color:#4a5668;font-family:'Space Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        </div>
+        <div title="Sign out" onclick="TrustAuth.logoutUser()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button onclick="connectWallet()" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#090d12;font-size:13px;font-weight:600;border:none;cursor:pointer;">Connect Wallet</button>
+      <span id="wallet-status" style="display:block;margin-top:5px;font-size:11px;color:var(--text3);text-align:center;">Not connected</span>
+    </div>
+    <div class="chain-badge"><div class="chain-dot"></div>2 flags active</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;" class="fade-in">
+      <div>
+        <div style="font-size:22px;font-weight:600;color:var(--danger)">⚑ Flagged Trades</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px;font-family:var(--mono)">2 active flags · Escrow held · Awaiting resolution</div>
+      </div>
+      <button class="btn btn-ghost">↓ Export Report</button>
+    </div>
+
+    <!-- Alert banner -->
+    <div class="alert-banner fade-in">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-text">
+        <div class="alert-title">Action required — $27,950 USDC held in escrow</div>
+        <div class="alert-sub">2 trades have been flagged by the AI verification system. Escrow payments are locked until disputes are resolved or documents are resubmitted.</div>
+      </div>
+    </div>
+
+    <!-- Flag Card 1: TRD-045 -->
+    <div class="flag-card fade-in fade-in-2">
+      <div class="fc-header">
+        <div>
+          <div class="fc-id">TRD-045 · Mar 13, 2026 · 07:21 UTC</div>
+          <div class="fc-product">Agricultural Products — Kenya Export</div>
+          <div class="fc-parties">
+            <span class="party-chip">🌱 Nairobi Farm Ltd.</span>
+            <span style="color:var(--text3)">→</span>
+            <span class="party-chip">📦 London Dist. Co.</span>
+          </div>
+        </div>
+        <div class="fc-right">
+          <span class="badge badge-flagged"><span class="badge-dot"></span> FLAGGED</span>
+          <div style="text-align:right;">
+            <div class="escrow-locked">$8,200</div>
+            <div class="escrow-label">USDC · HELD</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fc-body">
+        <div class="reasons-title">Flag reasons (2 detected)</div>
+        <div class="reasons-list">
+          <div class="reason-item">
+            <div class="ri-icon">🔍</div>
+            <div class="ri-text">
+              <div class="ri-title">Document hash mismatch</div>
+              <div class="ri-detail">Submitted: 0x2b9e...ff01 · Expected: 0x7f3a...c912</div>
+              <div class="ri-agent">Detected by Agent 2 — Document AI</div>
+            </div>
+          </div>
+          <div class="reason-item">
+            <div class="ri-icon">⚖</div>
+            <div class="ri-text">
+              <div class="ri-title">Quantity discrepancy — invoice vs bill of lading</div>
+              <div class="ri-detail">Invoice states 4,200 kg · Bill of lading states 3,850 kg · Delta: 350 kg ($1,190 value)</div>
+              <div class="ri-agent">Detected by Agent 1 — Verification AI</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="agents-mini">
+          <div class="am-card pass">
+            <div class="am-name">Agent 1 — Verification</div>
+            <div class="am-result r-fail">✗ FAIL</div>
+            <div class="am-detail">Quantity reconciliation failed</div>
+          </div>
+          <div class="am-card fail">
+            <div class="am-name">Agent 2 — Document</div>
+            <div class="am-result r-fail">✗ FAIL</div>
+            <div class="am-detail">Hash mismatch + format anomaly</div>
+          </div>
+        </div>
+
+        <div class="fc-actions">
+          <button class="btn btn-ghost" onclick="window.location.href='trade.html'">View full trade →</button>
+          <button class="btn btn-ghost" onclick="window.location.href='index.html'">↑ Resubmit documents</button>
+          <button class="btn btn-danger" onclick="resolveFlag('TRD-045')">✓ Mark resolved</button>
+          <button class="btn btn-ghost" style="margin-left:auto;">⬡ View on chain</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flag Card 2: TRD-043 -->
+    <div class="flag-card fade-in fade-in-3">
+      <div class="fc-header">
+        <div>
+          <div class="fc-id">TRD-043 · Mar 10, 2026 · 11:04 UTC</div>
+          <div class="fc-product">Pharmaceutical Raw Materials</div>
+          <div class="fc-parties">
+            <span class="party-chip">🧪 Basel Labs AG</span>
+            <span style="color:var(--text3)">→</span>
+            <span class="party-chip">💊 Karachi Pharma Ltd.</span>
+          </div>
+        </div>
+        <div class="fc-right">
+          <span class="badge badge-flagged"><span class="badge-dot"></span> FLAGGED</span>
+          <div style="text-align:right;">
+            <div class="escrow-locked">$19,750</div>
+            <div class="escrow-label">USDC · HELD</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fc-body">
+        <div class="reasons-title">Flag reasons (3 detected)</div>
+        <div class="reasons-list">
+          <div class="reason-item">
+            <div class="ri-icon">🔁</div>
+            <div class="ri-text">
+              <div class="ri-title">Duplicate invoice ID detected</div>
+              <div class="ri-detail">INV-2026-BL-0291 was previously used in TRD-038 on Mar 07, 2026</div>
+              <div class="ri-agent">Detected by Agent 1 — Verification AI</div>
+            </div>
+          </div>
+          <div class="reason-item">
+            <div class="ri-icon">💰</div>
+            <div class="ri-text">
+              <div class="ri-title">Price anomaly — 340% above market rate</div>
+              <div class="ri-detail">Declared: $890/kg · Market average: $202/kg · Anomaly score: 0.94</div>
+              <div class="ri-agent">Detected by Agent 1 — Verification AI</div>
+            </div>
+          </div>
+          <div class="reason-item">
+            <div class="ri-icon">✒</div>
+            <div class="ri-text">
+              <div class="ri-title">Signature authentication failed</div>
+              <div class="ri-detail">Certificate of origin signature does not match registered authority key</div>
+              <div class="ri-agent">Detected by Agent 2 — Document AI</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="agents-mini">
+          <div class="am-card fail">
+            <div class="am-name">Agent 1 — Verification</div>
+            <div class="am-result r-fail">✗ FAIL</div>
+            <div class="am-detail">Duplicate ID + price anomaly</div>
+          </div>
+          <div class="am-card fail">
+            <div class="am-name">Agent 2 — Document</div>
+            <div class="am-result r-fail">✗ FAIL</div>
+            <div class="am-detail">Signature verification failed</div>
+          </div>
+        </div>
+
+        <div class="fc-actions">
+          <button class="btn btn-ghost" onclick="window.location.href='trade.html'">View full trade →</button>
+          <button class="btn btn-ghost" onclick="window.location.href='index.html'">↑ Resubmit documents</button>
+          <button class="btn btn-danger" onclick="resolveFlag('TRD-043')">✓ Mark resolved</button>
+          <button class="btn btn-ghost" style="margin-left:auto;">⬡ View on chain</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolution log -->
+    <div class="resolution-panel fade-in">
+      <div class="rp-header">◎ Resolution Log — Recently Resolved</div>
+      <div class="rp-body">
+        <div class="rlog-item">
+          <div class="rlog-dot" style="background:var(--green)"></div>
+          <div class="rlog-content">
+            <div class="rlog-title">TRD-039 — Frozen Seafood — resolved</div>
+            <div class="rlog-detail">Documents resubmitted and re-verified · AI passed on second attempt</div>
+          </div>
+          <div class="rlog-time">Mar 08, 2026</div>
+        </div>
+        <div class="rlog-item">
+          <div class="rlog-dot" style="background:var(--green)"></div>
+          <div class="rlog-content">
+            <div class="rlog-title">TRD-031 — Steel Pipes — resolved</div>
+            <div class="rlog-detail">Quantity discrepancy corrected · Escrow released after re-verification</div>
+          </div>
+          <div class="rlog-time">Mar 05, 2026</div>
+        </div>
+        <div class="rlog-item">
+          <div class="rlog-dot" style="background:var(--text3)"></div>
+          <div class="rlog-content">
+            <div class="rlog-title">TRD-028 — Chemical Goods — cancelled</div>
+            <div class="rlog-detail">Trade cancelled by mutual agreement · Escrow refunded to buyer</div>
+          </div>
+          <div class="rlog-time">Feb 28, 2026</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Resolve modal -->
+<div id="resolve-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px;width:420px;max-width:90vw;">
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px;">Resolve Flag</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;" id="resolve-sub">Mark this trade as resolved and release escrow?</div>
+    <textarea placeholder="Resolution notes (required)..." style="width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;resize:vertical;min-height:80px;outline:none;margin-bottom:16px;"></textarea>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeResolve()" class="btn btn-ghost" style="flex:1">Cancel</button>
+      <button onclick="confirmResolve()" class="btn" style="flex:1;background:var(--green);color:#000;font-weight:600;">Confirm Resolution</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="engine.js"></script>
+<script>
+let resolvingId = null;
+
+function loadFlaggedTrades() {
+  const flagged = TrustTrade.storage.getTrades().filter(t => t.status === 'flagged');
+  const s = TrustTrade.getStats();
+
+  // Update nav badge
+  const badge = document.getElementById('nav-flag-count');
+  if(badge) badge.textContent = flagged.length;
+
+  // Update header
+  document.querySelector('.sidebar-footer .chain-badge').innerHTML =
+    `<div class="chain-dot"></div>${flagged.length} flag${flagged.length !== 1 ? 's' : ''} active`;
+
+  // Update alert
+  const heldEscrow = flagged.reduce((sum, t) => sum + t.escrow, 0);
+  document.querySelector('.alert-title').textContent =
+    `Action required — $${heldEscrow.toLocaleString()} USDC held in escrow`;
+  document.querySelector('.alert-sub').textContent =
+    `${flagged.length} trade${flagged.length !== 1 ? 's' : ''} flagged by the AI verification system. Escrow locked until resolved.`;
+}
+
+function resolveFlag(id) {
+  resolvingId = id;
+  document.getElementById('resolve-sub').textContent =
+    `Mark ${id} as resolved and release escrow to manufacturer?`;
+  document.getElementById('resolve-modal').style.display = 'flex';
+}
+
+function closeResolve() {
+  document.getElementById('resolve-modal').style.display = 'none';
+}
+
+function confirmResolve() {
+  closeResolve();
+  // Update trade status in storage
+  const trades = TrustTrade.storage.getTrades();
+  const trade = trades.find(t => t.id === resolvingId);
+  if (trade) {
+    trade.status = 'verified';
+    trade.aiScore = 75;
+    TrustTrade.storage.saveTrades(trades);
+  }
+  // Show success then reload
+  const banner = document.querySelector('.alert-banner');
+  banner.style.background = 'rgba(0,212,170,0.07)';
+  banner.style.borderColor = 'rgba(0,212,170,0.2)';
+  banner.querySelector('.alert-title').style.color = 'var(--accent)';
+  banner.querySelector('.alert-title').textContent = `${resolvingId} resolved — escrow release initiated on Base testnet`;
+  setTimeout(() => window.location.reload(), 1800);
+}
+
+loadFlaggedTrades();
+</script>
+<script src="auth.js"></script>
+<script>
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  TrustAuth.requireAuth();
+
+  // ── Role-based UI setup ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = TrustAuth.currentUser();
+    if (!user) return;
+
+    // Populate sidebar user badge
+    const badgeEl = document.getElementById('sidebar-user-badge');
+    if (badgeEl) {
+      badgeEl.querySelector('.suf-avatar').textContent = user.avatar || user.name.slice(0,2).toUpperCase();
+      badgeEl.querySelector('.suf-name').textContent = user.name;
+      badgeEl.querySelector('.suf-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1) + ' · ' + user.company;
+    }
+
+    // Apply role-based visibility
+    applyRoleBasedVisibility(user);
+  });
+
+  function applyRoleBasedVisibility(user) {
+    // Navigation items visibility
+    const navItems = {
+      'nav-agents': document.querySelector('.nav-item[onclick*="agents.html"]'),
+      'nav-flagged': document.querySelector('.nav-item[onclick*="flagged.html"]'),
+      'create-trade-btn': document.querySelector('.nav-item[onclick*="submit.html"]'),
+      'escrow-deposit-btn': document.querySelector('.nav-item[onclick*="escrow.html"]'),
+      'explorer-link': document.querySelector('.nav-item[onclick*="explorer.html"]'),
+      'profile-link': document.querySelector('.nav-item[onclick*="profile.html"]')
+    };
+
+    Object.entries(navItems).forEach(([id, element]) => {
+      if (element && !TrustAuth.shouldShowComponent(id, user)) {
+        element.style.display = 'none';
+      }
+    });
+  }
+
+  async function connectWallet() {
+    const ok = await TrustChain.connect();
+    document.getElementById('wallet-status').textContent =
+      ok ? '✅ Connected to Base Sepolia' : '❌ Wrong network or no wallet';
+  }
+</script>
+</body>
+</html>

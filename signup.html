@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Create Account — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #090d12; --bg2: #0e1420; --bg3: #131b26; --bg4: #1a2333;
+    --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.12);
+    --text: #e8edf5; --text2: #7a8a9e; --text3: #4a5668;
+    --accent: #00d4aa; --accent2: #0099ff; --danger: #ff4d6a; --warn: #ffaa00;
+    --mono: 'Space Mono', monospace; --sans: 'DM Sans', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    padding: 32px 16px;
+  }
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none; z-index:0;
+  }
+  .orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+  .orb1 { width:600px; height:600px; background:rgba(0,212,170,0.06); top:-200px; right:-200px; }
+  .orb2 { width:500px; height:500px; background:rgba(0,153,255,0.05); bottom:-200px; left:-150px; }
+
+  /* Shell */
+  .auth-shell {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 900px;
+    max-width: 96vw;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,212,170,0.05);
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+
+  /* Brand */
+  .brand-panel {
+    width: 320px;
+    flex-shrink: 0;
+    background: linear-gradient(145deg, #0a1520 0%, #0d1e2e 60%, #091420 100%);
+    border-right: 1px solid var(--border);
+    padding: 48px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-panel::before {
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 40%, rgba(0,212,170,0.08) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  .brand-logo { font-family:var(--mono); font-size:14px; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
+  .brand-tagline { font-family:var(--mono); font-size:10px; color:var(--text3); letter-spacing:0.08em; }
+  .brand-hero { flex:1; display:flex; flex-direction:column; justify-content:center; padding:28px 0; }
+  .brand-title { font-size:24px; font-weight:600; line-height:1.2; margin-bottom:14px; color:var(--text); }
+  .brand-title span { color:var(--accent); }
+  .brand-desc { font-size:12.5px; color:var(--text2); line-height:1.7; margin-bottom:24px; }
+
+  .steps-list { display:flex; flex-direction:column; gap:14px; }
+  .step-item { display:flex; align-items:flex-start; gap:12px; }
+  .step-num {
+    width:24px; height:24px; border-radius:50%;
+    background:rgba(0,212,170,0.12);
+    border:1px solid rgba(0,212,170,0.25);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:10px; font-weight:700; color:var(--accent);
+    flex-shrink:0; margin-top:1px;
+  }
+  .step-text { font-size:12px; color:var(--text2); line-height:1.5; }
+  .step-text strong { color:var(--text); font-weight:600; }
+
+  .chain-status { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:var(--text3); margin-top:24px; }
+  .chain-dot-live { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+
+  /* Form */
+  .form-panel {
+    flex: 1;
+    background: var(--bg2);
+    padding: 44px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .form-heading { font-size:22px; font-weight:600; color:var(--text); margin-bottom:5px; }
+  .form-sub { font-size:13px; color:var(--text2); margin-bottom:28px; }
+  .form-sub a { color:var(--accent); text-decoration:none; font-weight:500; }
+  .form-sub a:hover { text-decoration:underline; }
+
+  /* Progress steps */
+  .step-progress {
+    display: flex;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .sp-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  .sp-step:last-child { flex: 0; }
+  .sp-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    flex-shrink: 0; transition: all 0.3s;
+  }
+  .sp-circle.done { background:var(--accent); color:#000; }
+  .sp-circle.active { background:rgba(0,212,170,0.12); border:2px solid var(--accent); color:var(--accent); }
+  .sp-circle.todo { background:var(--bg3); border:1px solid var(--border2); color:var(--text3); }
+  .sp-label { font-size:11px; color:var(--text2); }
+  .sp-connector { flex:1; height:1px; background:var(--border); margin:0 10px; transition: background 0.3s; }
+  .sp-connector.done { background:rgba(0,212,170,0.35); }
+
+  /* Panels */
+  .step-panel { display:none; }
+  .step-panel.active { display:block; }
+
+  /* Fields */
+  .field { margin-bottom: 15px; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-bottom:15px; }
+  .field label { display:block; font-size:10px; color:var(--text3); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px; }
+  .field input, .field select {
+    width:100%; padding:11px 14px;
+    background:var(--bg3); border:1px solid var(--border2);
+    border-radius:9px; color:var(--text);
+    font-family:var(--sans); font-size:13.5px;
+    outline:none; transition:border-color 0.15s, box-shadow 0.15s;
+    appearance:none;
+  }
+  .field input:focus, .field select:focus {
+    border-color:rgba(0,212,170,0.5);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.06);
+  }
+  .field input::placeholder { color:var(--text3); }
+  .field select option { background:var(--bg2); }
+
+  /* Password strength */
+  .pw-strength { margin-top:7px; }
+  .pw-bars { display:flex; gap:4px; margin-bottom:4px; }
+  .pw-bar { height:3px; flex:1; border-radius:2px; background:var(--bg4); transition:background 0.3s; }
+  .pw-bar.weak { background: var(--danger); }
+  .pw-bar.fair { background: var(--warn); }
+  .pw-bar.good { background: var(--accent2); }
+  .pw-bar.strong { background: var(--accent); }
+  .pw-label { font-size:10px; font-family:var(--mono); color:var(--text3); }
+
+  .password-wrap { position:relative; }
+  .password-wrap input { padding-right:44px; }
+  .pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:var(--text3); font-size:15px; user-select:none; transition:color 0.15s; }
+  .pw-toggle:hover { color:var(--text2); }
+
+  /* Role select cards */
+  .role-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .role-card {
+    padding:14px 16px;
+    background:var(--bg3);
+    border:1px solid var(--border2);
+    border-radius:10px;
+    cursor:pointer;
+    transition:all 0.15s;
+    text-align:center;
+  }
+  .role-card:hover { border-color:rgba(0,212,170,0.3); background:rgba(0,212,170,0.03); }
+  .role-card.selected { border-color:var(--accent); background:rgba(0,212,170,0.07); }
+  .role-icon { font-size:22px; margin-bottom:6px; }
+  .role-name { font-size:12.5px; font-weight:600; color:var(--text); }
+  .role-desc { font-size:10px; color:var(--text3); font-family:var(--mono); margin-top:2px; }
+
+  /* Terms */
+  .terms-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; cursor:pointer; }
+  .terms-row input[type=checkbox] { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; margin-top:2px; }
+  .terms-text { font-size:12px; color:var(--text2); line-height:1.5; }
+  .terms-text a { color:var(--accent); text-decoration:none; }
+
+  /* Buttons */
+  .btn-row { display:flex; gap:10px; margin-top:4px; }
+  .btn-back {
+    flex:1; padding:12px; background:transparent;
+    border:1px solid var(--border2); border-radius:9px;
+    color:var(--text2); font-size:13px; font-family:var(--sans);
+    cursor:pointer; transition:all 0.15s;
+  }
+  .btn-back:hover { background:var(--bg3); color:var(--text); }
+  .btn-next {
+    flex:2; padding:12px;
+    background:var(--accent); color:#000;
+    border:none; border-radius:9px;
+    font-size:14px; font-weight:700; font-family:var(--sans);
+    cursor:pointer; transition:opacity 0.15s, transform 0.15s;
+  }
+  .btn-next:hover { opacity:0.88; transform:translateY(-1px); }
+  .btn-next:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+  /* Error */
+  .error-msg {
+    display:none;
+    background:rgba(255,77,106,0.08); border:1px solid rgba(255,77,106,0.2);
+    border-radius:8px; padding:10px 14px; font-size:12px; color:var(--danger);
+    font-family:var(--mono); margin-bottom:14px;
+  }
+  .error-msg.show { display:block; }
+
+  /* Success screen */
+  .success-screen {
+    text-align:center;
+    padding:20px 0;
+  }
+  .success-icon {
+    width:72px; height:72px; border-radius:50%;
+    background:rgba(0,212,170,0.1); border:2px solid rgba(0,212,170,0.3);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; margin:0 auto 20px;
+    animation:popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+  }
+  @keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+  .success-title { font-size:22px; font-weight:600; color:var(--text); margin-bottom:8px; }
+  .success-sub { font-size:13px; color:var(--text2); margin-bottom:28px; line-height:1.6; }
+  .success-card {
+    background:var(--bg3); border:1px solid var(--border2);
+    border-radius:12px; padding:16px 20px; margin-bottom:24px; text-align:left;
+  }
+  .sc-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .sc-row:last-child { margin-bottom:0; }
+  .sc-key { font-size:10px; font-family:var(--mono); color:var(--text3); }
+  .sc-val { font-size:12px; font-family:var(--mono); color:var(--text); }
+
+  @media (max-width: 680px) {
+    .brand-panel { display:none; }
+    .form-panel { padding:32px 24px; }
+    .field-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="auth-shell">
+
+  <!-- Left Brand -->
+  <div class="brand-panel">
+    <div>
+      <div class="brand-logo">TrustTrade</div>
+      <div class="brand-tagline">Supply Chain Verification</div>
+    </div>
+    <div class="brand-hero">
+      <div class="brand-title">Join the <span>verified</span><br>supply chain</div>
+      <div class="brand-desc">Create your account and start submitting trades, depositing escrow, and getting AI verification in seconds.</div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>Create your account</strong><br>Name, email &amp; company info</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Choose your role</strong><br>Manufacturer, Buyer, or Agent</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Start trading</strong><br>Submit trades and lock escrow</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="chain-status">
+        <div class="chain-dot-live"></div>
+        Base Testnet · Live
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Form -->
+  <div class="form-panel" id="form-panel">
+    <div class="form-heading">Create account</div>
+    <div class="form-sub">Already have one? <a href="login.html">Sign in →</a></div>
+
+    <!-- Step progress -->
+    <div class="step-progress">
+      <div class="sp-step">
+        <div class="sp-circle active" id="sp1">1</div>
+        <div class="sp-label">Account</div>
+      </div>
+      <div class="sp-connector" id="conn1"></div>
+      <div class="sp-step">
+        <div class="sp-circle todo" id="sp2">2</div>
+        <div class="sp-label">Role</div>
+      </div>
+      <div class="sp-connector" id="conn2"></div>
+      <div class="sp-step">
+        <div class="sp-circle todo" id="sp3">✓</div>
+        <div class="sp-label">Done</div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <!-- Step 1: Account details -->
+    <div class="step-panel active" id="panel-1">
+      <div class="field-row">
+        <div class="field">
+          <label>First name</label>
+          <input type="text" id="inp-first" placeholder="Alex" autocomplete="given-name"/>
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <input type="text" id="inp-last" placeholder="Chen" autocomplete="family-name"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Work email</label>
+        <input type="email" id="inp-email" placeholder="you@company.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Company name</label>
+        <input type="text" id="inp-company" placeholder="Shenzhen MFG Ltd." autocomplete="organization"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="password-wrap">
+          <input type="password" id="inp-password" placeholder="Create a strong password" oninput="checkStrength(this.value)" autocomplete="new-password"/>
+          <div class="pw-toggle" onclick="togglePw('inp-password',this)">👁</div>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-bars">
+            <div class="pw-bar" id="bar1"></div>
+            <div class="pw-bar" id="bar2"></div>
+            <div class="pw-bar" id="bar3"></div>
+            <div class="pw-bar" id="bar4"></div>
+          </div>
+          <div class="pw-label" id="pw-label">Enter a password</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <div class="password-wrap">
+          <input type="password" id="inp-confirm" placeholder="Repeat your password" autocomplete="new-password"/>
+          <div class="pw-toggle" onclick="togglePw('inp-confirm',this)">👁</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-next" onclick="goStep2()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Role selection -->
+    <div class="step-panel" id="panel-2">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Select your role in the supply chain. This determines your default permissions.</div>
+      <div class="role-grid">
+        <div class="role-card" id="role-manufacturer" onclick="selectRole('manufacturer')">
+          <div class="role-icon">🏭</div>
+          <div class="role-name">Manufacturer</div>
+          <div class="role-desc">Submit trades, receive escrow</div>
+        </div>
+        <div class="role-card" id="role-buyer" onclick="selectRole('buyer')">
+          <div class="role-icon">🛒</div>
+          <div class="role-name">Buyer</div>
+          <div class="role-desc">Deposit escrow, approve trades</div>
+        </div>
+        <div class="role-card" id="role-Agent" onclick="selectRole('Agent')">
+          <div class="role-icon">🔍</div>
+          <div class="role-name">Agent / Auditor</div>
+          <div class="role-desc">Review and flag transactions</div>
+        </div>
+        <div class="role-card" id="role-Admin" onclick="selectRole('Admin')">
+          <div class="role-icon">⚙</div>
+          <div class="role-name">Admin</div>
+          <div class="role-desc">Full platform access</div>
+        </div>
+      </div>
+      <div class="terms-row">
+        <input type="checkbox" id="terms-check"/>
+        <div class="terms-text">
+          I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand this is a demo platform using Base testnet.
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-back" onclick="goStep1()">← Back</button>
+        <button class="btn-next" onclick="doSignup()">Create Account →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="step-panel" id="panel-3">
+      <div class="success-screen">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Account created!</div>
+        <div class="success-sub">Welcome to TrustTrade. Your account is ready — you'll be redirected to the dashboard.</div>
+        <div class="success-card" id="success-card">
+          <div class="sc-row"><span class="sc-key">Name</span><span class="sc-val" id="s-name">—</span></div>
+          <div class="sc-row"><span class="sc-key">Email</span><span class="sc-val" id="s-email">—</span></div>
+          <div class="sc-row"><span class="sc-key">Company</span><span class="sc-val" id="s-company">—</span></div>
+          <div class="sc-row"><span class="sc-key">Role</span><span class="sc-val" id="s-role">—</span></div>
+        </div>
+        <button class="btn-next" style="width:100%;" onclick="window.location.href='index.html'">Go to Dashboard →</button>
+      </div>
+    </div>
+
+  </div><!-- /form-panel -->
+</div>
+
+<script src="auth.js"></script>
+<script>
+  if (TrustAuth.currentUser()) window.location.href = 'index.html';
+
+  let selectedRole = null;
+
+  function togglePw(id, tog) {
+    const inp = document.getElementById(id);
+    if (inp.type === 'password') { inp.type = 'text'; tog.textContent = '🙈'; }
+    else { inp.type = 'password'; tog.textContent = '👁'; }
+  }
+
+  function checkStrength(val) {
+    const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+    const label = document.getElementById('pw-label');
+    bars.forEach(b => { b.className = 'pw-bar'; });
+
+    let score = 0;
+    if (val.length >= 6) score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = ['weak','fair','good','strong'];
+    const labels = ['Weak','Fair','Good','Strong'];
+    for (let i = 0; i < score; i++) bars[i].classList.add(levels[score - 1]);
+    label.textContent = val.length === 0 ? 'Enter a password' : labels[score - 1] || 'Weak';
+    label.style.color = score <= 1 ? 'var(--danger)' : score === 2 ? 'var(--warn)' : score === 3 ? 'var(--accent2)' : 'var(--accent)';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = '⚠ ' + msg;
+    el.classList.add('show');
+  }
+  function clearError() { document.getElementById('error-msg').classList.remove('show'); }
+
+  function setStep(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + n).classList.add('active');
+
+    const circles = ['sp1','sp2','sp3'];
+    const conns   = ['conn1','conn2'];
+    circles.forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.className = 'sp-circle ' + (i + 1 < n ? 'done' : i + 1 === n ? 'active' : 'todo');
+      if (i + 1 < n) el.textContent = '✓';
+      else el.textContent = i + 1;
+    });
+    conns.forEach((id, i) => {
+      document.getElementById(id).className = 'sp-connector' + (i + 1 < n ? ' done' : '');
+    });
+  }
+
+  function goStep1() { clearError(); setStep(1); }
+
+  function goStep2() {
+    clearError();
+    const first   = document.getElementById('inp-first').value.trim();
+    const last    = document.getElementById('inp-last').value.trim();
+    const email   = document.getElementById('inp-email').value.trim();
+    const company = document.getElementById('inp-company').value.trim();
+    const pw      = document.getElementById('inp-password').value;
+    const conf    = document.getElementById('inp-confirm').value;
+
+    if (!first || !last) return showError('Please enter your full name.');
+    if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
+    if (!company) return showError('Please enter your company name.');
+    if (pw.length < 6) return showError('Password must be at least 6 characters.');
+    if (pw !== conf) return showError('Passwords do not match.');
+
+    setStep(2);
+  }
+
+  function selectRole(role) {
+    selectedRole = role;
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('role-' + role).classList.add('selected');
+    clearError();
+  }
+
+  function doSignup() {
+    clearError();
+    if (!selectedRole) return showError('Please select your role.');
+    if (!document.getElementById('terms-check').checked) return showError('Please agree to the Terms of Service.');
+
+    const btn = document.querySelector('#panel-2 .btn-next');
+    btn.disabled = true;
+    btn.textContent = 'Creating account…';
+
+    const name    = (document.getElementById('inp-first').value.trim() + ' ' + document.getElementById('inp-last').value.trim()).trim();
+    const email   = document.getElementById('inp-email').value.trim();
+    const company = document.getElementById('inp-company').value.trim();
+    const pw      = document.getElementById('inp-password').value;
+
+    // Use new auth system
+    TrustAuth.registerUser({ name, email, company, role: selectedRole, password: pw })
+      .then(user => {
+        document.getElementById('s-name').textContent    = user.name;
+        document.getElementById('s-email').textContent   = user.email;
+        document.getElementById('s-company').textContent = user.company;
+        document.getElementById('s-role').textContent    = user.role;
+        setStep(3);
+        setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+      })
+      .catch(error => {
+        showError(error.message);
+        btn.disabled = false;
+        btn.textContent = 'Create Account →';
+        setStep(1);
+      });
+  }
+</script>
+</body>
+</html>

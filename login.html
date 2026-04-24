@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign In — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #090d12;
+    --bg2: #0e1420;
+    --bg3: #131b26;
+    --bg4: #1a2333;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8edf5;
+    --text2: #7a8a9e;
+    --text3: #4a5668;
+    --accent: #00d4aa;
+    --accent2: #0099ff;
+    --danger: #ff4d6a;
+    --warn: #ffaa00;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Grid */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* Orbs */
+  .orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+  .orb1 { width:600px; height:600px; background:rgba(0,212,170,0.07); top:-180px; right:-180px; }
+  .orb2 { width:500px; height:500px; background:rgba(0,153,255,0.05); bottom:-180px; left:-120px; }
+  .orb3 { width:300px; height:300px; background:rgba(0,212,170,0.04); bottom:20%; right:10%; }
+
+  /* Two-panel layout */
+  .auth-shell {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 900px;
+    max-width: 96vw;
+    min-height: 560px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,212,170,0.05);
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(24px); }
+    to   { opacity:1; transform: none; }
+  }
+
+  /* Left brand panel */
+  .brand-panel {
+    width: 380px;
+    flex-shrink: 0;
+    background: linear-gradient(145deg, #0a1520 0%, #0d1e2e 60%, #091420 100%);
+    border-right: 1px solid var(--border);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 40%, rgba(0,212,170,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .brand-logo {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .brand-tagline {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+  }
+
+  .brand-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 32px 0;
+  }
+  .brand-title {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+  .brand-title span { color: var(--accent); }
+  .brand-desc {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  .trust-items { display: flex; flex-direction: column; gap: 10px; }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+  .trust-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    flex-shrink: 0;
+  }
+
+  .brand-stats {
+    display: flex;
+    gap: 24px;
+  }
+  .bs-item { }
+  .bs-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .bs-label {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+
+  /* Right form panel */
+  .form-panel {
+    flex: 1;
+    background: var(--bg2);
+    padding: 48px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .form-heading {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .form-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 32px;
+  }
+  .form-sub a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .form-sub a:hover { text-decoration: underline; }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 7px;
+  }
+  .field input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus {
+    border-color: rgba(0,212,170,0.5);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.06);
+  }
+  .field input::placeholder { color: var(--text3); }
+
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 44px; }
+  .pw-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 15px;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  .pw-toggle:hover { color: var(--text2); }
+
+  .form-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .remember-row input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .forgot-link {
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    font-family: var(--mono);
+    cursor: pointer;
+  }
+  .forgot-link:hover { text-decoration: underline; }
+
+  .btn-signin {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+  }
+  .btn-signin:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-signin:active { transform: none; }
+  .btn-signin:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--text3);
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border2);
+  }
+
+  .demo-accounts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .demo-account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .demo-account:hover {
+    border-color: rgba(0,212,170,0.3);
+    background: rgba(0,212,170,0.04);
+  }
+  .demo-avatar {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(0,212,170,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .demo-info { flex: 1; min-width: 0; }
+  .demo-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .demo-email { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .demo-role-badge {
+    font-size: 9px;
+    font-family: var(--mono);
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(0,153,255,0.1);
+    color: var(--accent2);
+    border: 1px solid rgba(0,153,255,0.2);
+  }
+
+  .error-msg {
+    display: none;
+    background: rgba(255,77,106,0.08);
+    border: 1px solid rgba(255,77,106,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--danger);
+    font-family: var(--mono);
+    margin-bottom: 16px;
+  }
+  .error-msg.show { display: block; }
+
+  /* Chain status bar at bottom of brand */
+  .chain-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+  .chain-dot-live {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+
+  @media (max-width: 680px) {
+    .brand-panel { display: none; }
+    .form-panel { padding: 40px 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="auth-shell">
+
+  <!-- Left: Brand panel -->
+  <div class="brand-panel">
+    <div>
+      <div class="brand-logo">TrustTrade</div>
+      <div class="brand-tagline">Supply Chain Verification</div>
+    </div>
+
+    <div class="brand-hero">
+      <div class="brand-title">
+        AI-powered<br>trade <span>verification</span><br>on Base
+      </div>
+      <div class="brand-desc">
+        Secure escrow, tamper-proof documents, and real-time AI agents protecting every transaction.
+      </div>
+      <div class="trust-items">
+        <div class="trust-item"><div class="trust-dot"></div>Two-agent fraud detection</div>
+        <div class="trust-item"><div class="trust-dot"></div>USDC escrow on Base testnet</div>
+        <div class="trust-item"><div class="trust-dot"></div>Immutable audit trail</div>
+        <div class="trust-item"><div class="trust-dot"></div>Real-time tamper alerts</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="brand-stats">
+        <div class="bs-item">
+          <div class="bs-val">$2.1M</div>
+          <div class="bs-label">Escrow secured</div>
+        </div>
+        <div class="bs-item">
+          <div class="bs-val">47</div>
+          <div class="bs-label">Trades verified</div>
+        </div>
+        <div class="bs-item">
+          <div class="bs-val">99.1%</div>
+          <div class="bs-label">Accuracy</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;">
+        <div class="chain-status">
+          <div class="chain-dot-live"></div>
+          Base Testnet · Live · Block #4,821,093
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Form panel -->
+  <div class="form-panel">
+    <div class="form-heading">Welcome back</div>
+    <div class="form-sub">
+      Don't have an account? <a href="signup.html">Create one →</a>
+    </div>
+
+    <div class="error-msg" id="error-msg">⚠ Invalid email or password.</div>
+
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="input-email" placeholder="you@company.com" autocomplete="email"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="password-wrap">
+        <input type="password" id="input-password" placeholder="Enter your password" autocomplete="current-password"/>
+        <div class="pw-toggle" id="pw-toggle" onclick="togglePassword()">👁</div>
+      </div>
+    </div>
+
+    <div class="form-footer-row">
+      <label class="remember-row">
+        <input type="checkbox" id="remember-me" checked/>
+        Remember me
+      </label>
+      <span class="forgot-link" onclick="showForgot()">Forgot password?</span>
+    </div>
+
+    <button class="btn-signin" id="signin-btn" onclick="doLogin()">Sign In →</button>
+
+    <div class="divider">or sign in with a demo account</div>
+
+    <div class="demo-accounts">
+      <div class="demo-account" onclick="fillDemo('demo@manufacturer.com','demo1234')">
+        <div class="demo-avatar">DM</div>
+        <div class="demo-info">
+          <div class="demo-name">Demo Manufacturer</div>
+          <div class="demo-email">demo@manufacturer.com · Demo Manufacturing Co.</div>
+        </div>
+        <div class="demo-role-badge">Manufacturer</div>
+      </div>
+      <div class="demo-account" onclick="fillDemo('alex@shenzhen-mfg.com','demo1234')">
+        <div class="demo-avatar">AC</div>
+        <div class="demo-info">
+          <div class="demo-name">Alex Chen</div>
+          <div class="demo-email">alex@shenzhen-mfg.com · Shenzhen MFG</div>
+        </div>
+        <div class="demo-role-badge">Manufacturer</div>
+      </div>
+      <div class="demo-account" onclick="fillDemo('sarah@dubai-dist.com','demo1234')">
+        <div class="demo-avatar">SW</div>
+        <div class="demo-info">
+          <div class="demo-name">Sarah Williams</div>
+          <div class="demo-email">sarah@dubai-dist.com · Dubai Dist.</div>
+        </div>
+        <div class="demo-role-badge">Buyer</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="auth.js"></script>
+<script>
+  // If already logged in, skip to dashboard
+  if (TrustAuth.currentUser()) window.location.href = 'index.html';
+
+  function togglePassword() {
+    const inp = document.getElementById('input-password');
+    const tog = document.getElementById('pw-toggle');
+    if (inp.type === 'password') { inp.type = 'text'; tog.textContent = '🙈'; }
+    else { inp.type = 'password'; tog.textContent = '👁'; }
+  }
+
+  function fillDemo(email, pass) {
+    document.getElementById('input-email').value = email;
+    document.getElementById('input-password').value = pass;
+    document.getElementById('error-msg').classList.remove('show');
+  }
+
+  function showForgot() {
+    alert('Demo mode: Use password "demo1234" for the demo accounts, or create a new account.');
+  }
+
+  function doLogin() {
+    const email = document.getElementById('input-email').value.trim();
+    const pass  = document.getElementById('input-password').value;
+    const btn   = document.getElementById('signin-btn');
+    const errEl = document.getElementById('error-msg');
+
+    errEl.classList.remove('show');
+
+    if (!email || !pass) {
+      errEl.textContent = '⚠ Please enter your email and password.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    // Use new auth system
+    TrustAuth.loginUser(email, pass)
+      .then(user => {
+        btn.textContent = '✓ Authenticated';
+        setTimeout(() => { window.location.href = 'index.html'; }, 400);
+      })
+      .catch(error => {
+        errEl.textContent = '⚠ ' + error.message;
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Sign In →';
+      });
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>

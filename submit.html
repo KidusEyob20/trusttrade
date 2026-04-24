@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Submit Trade — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#090d12;--bg2:#0e1420;--bg3:#131b26;--bg4:#1a2333;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#e8edf5;--text2:#7a8a9e;--text3:#4a5668;--accent:#00d4aa;--accent2:#0099ff;--danger:#ff4d6a;--warn:#ffaa00;--green:#00d4aa;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,170,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(0,212,170,0.06);top:-100px;right:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(0,153,255,0.05);bottom:-100px;left:-80px;}
+  .shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .logo-mark{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+  .nav-section{padding:0 12px;margin-bottom:24px;}
+  .nav-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:0 8px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all 0.15s;border:1px solid transparent;margin-bottom:2px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.2);color:var(--accent);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+  .chain-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .chain-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+  .main{flex:1;padding:32px 36px;overflow-y:auto;}
+
+  /* Step progress */
+  .step-progress{display:flex;align-items:center;margin-bottom:36px;}
+  .step{display:flex;align-items:center;gap:10px;flex:1;}
+  .step:last-child{flex:0;}
+  .step-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;transition:all 0.3s;}
+  .step-circle.done{background:var(--accent);color:#000;}
+  .step-circle.active{background:rgba(0,212,170,0.15);border:2px solid var(--accent);color:var(--accent);}
+  .step-circle.todo{background:var(--bg3);border:1px solid var(--border2);color:var(--text3);}
+  .step-info{flex:1;}
+  .step-label{font-size:12px;font-weight:600;color:var(--text);}
+  .step-sub{font-size:10px;color:var(--text3);font-family:var(--mono);}
+  .step-connector{flex:1;height:1px;background:var(--border);margin:0 12px;}
+  .step-connector.done{background:var(--accent);opacity:0.4;}
+
+  /* Form layout */
+  .form-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;}
+
+  /* Step panels */
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+
+  .panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+  .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .panel-body{padding:20px;}
+
+  /* Form fields */
+  .field{margin-bottom:16px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+  label{display:block;font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+  input[type=text],input[type=number],input[type=email],select,textarea{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color 0.15s;appearance:none;}
+  input:focus,select:focus,textarea:focus{border-color:rgba(0,212,170,0.4);}
+  input::placeholder,textarea::placeholder{color:var(--text3);}
+  select option{background:var(--bg2);}
+  textarea{resize:vertical;min-height:80px;}
+
+  /* Drop zone */
+  .drop-zone{border:1.5px dashed var(--border2);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg3);margin-bottom:14px;}
+  .drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:rgba(0,212,170,0.04);}
+  .drop-icon{font-size:28px;margin-bottom:10px;}
+  .drop-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+  .drop-sub{font-size:11px;color:var(--text3);font-family:var(--mono);}
+  .drop-types{margin-top:8px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+  .type-pill{padding:3px 8px;background:var(--bg4);border-radius:4px;font-size:10px;font-family:var(--mono);color:var(--text3);}
+
+  /* Uploaded file items */
+  .file-list{display:flex;flex-direction:column;gap:8px;}
+  .file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;animation:slideIn 0.25s ease;}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .fi-icon{font-size:18px;}
+  .fi-info{flex:1;}
+  .fi-name{font-size:12px;font-weight:500;color:var(--text);}
+  .fi-meta{font-size:10px;color:var(--text2);font-family:var(--mono);margin-top:2px;}
+  .fi-status{font-size:11px;font-family:var(--mono);font-weight:700;}
+  .fi-remove{cursor:pointer;color:var(--text3);font-size:16px;padding:2px 6px;border-radius:4px;transition:all 0.12s;}
+  .fi-remove:hover{background:rgba(255,77,106,0.1);color:var(--danger);}
+  .fi-bar{height:2px;background:var(--bg4);border-radius:1px;margin-top:6px;overflow:hidden;}
+  .fi-progress{height:100%;background:var(--accent);border-radius:1px;width:0;transition:width 0.8s ease;}
+
+  /* Side summary */
+  .summary-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;position:sticky;top:20px;}
+  .sc-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:16px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;}
+  .sc-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;}
+  .sc-key{font-size:11px;color:var(--text3);font-family:var(--mono);}
+  .sc-val{font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;max-width:160px;word-break:break-word;}
+  .sc-divider{height:1px;background:var(--border);margin:14px 0;}
+  .sc-total{display:flex;justify-content:space-between;align-items:center;}
+  .sc-total-key{font-size:12px;color:var(--text2);font-family:var(--mono);}
+  .sc-total-val{font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent);}
+  .sc-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:6px;line-height:1.6;}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:var(--sans);}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{background:var(--bg3);color:var(--text);}
+  .btn-primary{background:var(--accent);color:#000;font-weight:600;}
+  .btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+  .btn-full{width:100%;justify-content:center;margin-top:14px;}
+
+  /* Verification animation */
+  .verify-steps{display:flex;flex-direction:column;gap:10px;margin:20px 0;}
+  .vs-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);}
+  .vs-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+  .vs-text{flex:1;font-size:12px;font-family:var(--mono);color:var(--text2);}
+  .vs-status{font-family:var(--mono);font-size:11px;font-weight:700;}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.15);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn 0.35s ease both;}
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" onclick="window.location.href='index.html'">TrustTrade</div>
+      <div class="logo-sub">v0.1 · Base Testnet</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">◈</span> Dashboard</div>
+      <div class="nav-item" onclick="window.location.href='trades.html'"><span class="nav-icon">⬡</span> All Trades</div>
+      <div class="nav-item" onclick="window.location.href='flagged.html'"><span class="nav-icon">⚑</span> Flagged<span id="nav-flag-count" style="margin-left:auto;background:rgba(255,77,106,0.15);color:var(--danger);font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:10px;">2</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Actions</div>
+      <div class="nav-item active"><span class="nav-icon">＋</span> Create Trade</div>
+      <div class="nav-item" onclick="window.location.href='escrow.html'"><span class="nav-icon">◎</span> Deposit Escrow</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="window.location.href='explorer.html'"><span class="nav-icon">⬡</span> Block Explorer</div>
+      <div class="nav-item" onclick="window.location.href='agents.html'"><span class="nav-icon">⚙</span> AI Agents</div>
+    </div>
+    <div class="sidebar-footer">
+          <div id="sidebar-user-badge" style="padding:12px 16px 0;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131b26;border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:default;">
+        <div class="suf-avatar" style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#00d4aa;flex-shrink:0;">??</div>
+        <div style="flex:1;min-width:0;">
+          <div class="suf-name" style="font-size:12px;font-weight:600;color:#e8edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
+          <div class="suf-role" style="font-size:9px;color:#4a5668;font-family:'Space Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        </div>
+        <div title="Sign out" onclick="TrustAuth.logoutUser()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button onclick="connectWallet()" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#090d12;font-size:13px;font-weight:600;border:none;cursor:pointer;">Connect Wallet</button>
+      <span id="wallet-status" style="display:block;margin-top:5px;font-size:11px;color:var(--text3);text-align:center;">Not connected</span>
+    </div>
+    <div class="chain-badge"><div class="chain-dot"></div>Base Testnet · Block #4,821,107</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- Page header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;" class="fade-in">
+      <div>
+        <div style="font-size:22px;font-weight:600;">Create New Trade</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px;font-family:var(--mono);">Submit trade details, lock escrow, and run AI verification</div>
+      </div>
+      <button class="btn btn-ghost" onclick="window.location.href='index.html'">✕ Cancel</button>
+    </div>
+
+    <!-- Step progress -->
+    <div class="step-progress fade-in" id="step-progress">
+      <div class="step">
+        <div class="step-circle active" id="sc-1">1</div>
+        <div class="step-info"><div class="step-label">Trade details</div><div class="step-sub">Parties + product</div></div>
+      </div>
+      <div class="step-connector" id="conn-1"></div>
+      <div class="step">
+        <div class="step-circle todo" id="sc-2">2</div>
+        <div class="step-info"><div class="step-label">Escrow deposit</div><div class="step-sub">Lock USDC</div></div>
+      </div>
+      <div class="step-connector" id="conn-2"></div>
+      <div class="step">
+        <div class="step-circle todo" id="sc-3">3</div>
+        <div class="step-info"><div class="step-label">Upload documents</div><div class="step-sub">Invoice, BOL, COO</div></div>
+      </div>
+      <div class="step-connector" id="conn-3"></div>
+      <div class="step">
+        <div class="step-circle todo" id="sc-4">4</div>
+        <div class="step-info"><div class="step-label">AI verification</div><div class="step-sub">Auto-run agents</div></div>
+      </div>
+      <div class="step-connector" id="conn-4"></div>
+      <div class="step" style="flex:0">
+        <div class="step-circle todo" id="sc-5">5</div>
+        <div class="step-info"><div class="step-label">Complete</div><div class="step-sub">On-chain record</div></div>
+      </div>
+    </div>
+
+    <div class="form-layout">
+      <div>
+
+        <!-- STEP 1: Trade details -->
+        <div class="step-panel active" id="panel-1">
+          <div class="panel">
+            <div class="panel-header">⬡ Trade details</div>
+            <div class="panel-body">
+              <div class="field">
+                <label>Product name</label>
+                <input type="text" id="f-product" placeholder="e.g. Electronics Components" oninput="updateSummary()"/>
+              </div>
+              <div class="field-row">
+                <div>
+                  <label>Manufacturer (seller)</label>
+                  <input type="text" id="f-manufacturer" placeholder="Company name" oninput="updateSummary()"/>
+                </div>
+                <div>
+                  <label>Buyer / distributor</label>
+                  <input type="text" id="f-buyer" placeholder="Company name" oninput="updateSummary()"/>
+                </div>
+              </div>
+              <div class="field-row">
+                <div>
+                  <label>Manufacturer country</label>
+                  <select id="f-mfg-country" onchange="updateSummary()">
+                    <option value="">Select country</option>
+                    <option>United Arab Emirates</option>
+                    <option>China</option>
+                    <option>India</option>
+                    <option>Germany</option>
+                    <option>United States</option>
+                    <option>Ethiopia</option>
+                    <option>Japan</option>
+                    <option>South Korea</option>
+                    <option>United Kingdom</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Buyer country</label>
+                  <select id="f-buyer-country" onchange="updateSummary()">
+                    <option value="">Select country</option>
+                    <option>United Arab Emirates</option>
+                    <option>Germany</option>
+                    <option>United States</option>
+                    <option>Japan</option>
+                    <option>United Kingdom</option>
+                    <option>Netherlands</option>
+                    <option>Singapore</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-row">
+                <div>
+                  <label>Product category</label>
+                  <select id="f-category">
+                    <option>Electronics</option>
+                    <option>Textiles</option>
+                    <option>Agriculture</option>
+                    <option>Automotive</option>
+                    <option>Pharmaceuticals</option>
+                    <option>Chemicals</option>
+                    <option>Food &amp; Beverage</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Quantity + unit</label>
+                  <input type="text" id="f-qty" placeholder="e.g. 2,400 units" oninput="updateSummary()"/>
+                </div>
+              </div>
+              <div class="field">
+                <label>Additional notes</label>
+                <textarea id="f-notes" placeholder="Any special handling, certifications, or trade terms..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button class="btn btn-ghost" onclick="window.location.href='index.html'">Cancel</button>
+            <button class="btn btn-primary" onclick="goStep(2)">Next: Escrow deposit →</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Escrow -->
+        <div class="step-panel" id="panel-2">
+          <div class="panel">
+            <div class="panel-header">$ Escrow deposit</div>
+            <div class="panel-body">
+              <div style="background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.15);border-radius:8px;padding:14px;margin-bottom:18px;font-size:12px;color:var(--text2);line-height:1.7;">
+                The buyer deposits USDC into a smart contract on Base testnet. Funds are locked until both AI agents verify the trade documents. If verification fails, escrow is held. If it passes, funds are automatically released to the seller.
+              </div>
+              <div class="field">
+                <label>Escrow amount (USDC)</label>
+                <input type="number" id="f-escrow" placeholder="0.00" oninput="updateSummary()"/>
+              </div>
+              <div class="field-row">
+                <div>
+                  <label>Buyer wallet address</label>
+                  <input type="text" id="f-wallet-buyer" placeholder="0x..." oninput="updateSummary()"/>
+                </div>
+                <div>
+                  <label>Seller wallet address</label>
+                  <input type="text" id="f-wallet-seller" placeholder="0x..."/>
+                </div>
+              </div>
+              <div style="background:var(--bg3);border-radius:8px;padding:14px;border:1px solid var(--border);">
+                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em;">Fee breakdown</div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-family:var(--mono);margin-bottom:6px;"><span style="color:var(--text2)">Principal</span><span id="fee-principal" style="color:var(--text)">$0.00</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;font-family:var(--mono);margin-bottom:6px;"><span style="color:var(--text2)">Platform fee (0.5%)</span><span id="fee-platform" style="color:var(--warn)">$0.00</span></div>
+                <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;font-family:var(--mono);"><span style="color:var(--text)">Seller receives</span><span id="fee-seller" style="color:var(--green);font-weight:700;">$0.00</span></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+            <button class="btn btn-primary" onclick="goStep(3)">Next: Upload documents →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Upload docs -->
+        <div class="step-panel" id="panel-3">
+          <div class="panel">
+            <div class="panel-header">↑ Upload trade documents</div>
+            <div class="panel-body">
+              <p style="font-size:12px;color:var(--text2);margin-bottom:16px;font-family:var(--mono);">Upload your trade documents below. All files are hashed on upload and the hash is stored on Base testnet for immutable reference.</p>
+
+              <!-- Required docs -->
+              <div style="font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Required documents</div>
+              <div id="drop-invoice" class="drop-zone" onclick="simulateUpload('invoice')" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+                <div class="drop-icon">📄</div>
+                <div class="drop-title">Commercial Invoice</div>
+                <div class="drop-sub">Drag & drop or click to upload</div>
+                <div class="drop-types"><span class="type-pill">PDF</span><span class="type-pill">JPG</span><span class="type-pill">PNG</span></div>
+              </div>
+              <div id="drop-bol" class="drop-zone" onclick="simulateUpload('bol')" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+                <div class="drop-icon">🚢</div>
+                <div class="drop-title">Bill of Lading</div>
+                <div class="drop-sub">Drag & drop or click to upload</div>
+                <div class="drop-types"><span class="type-pill">PDF</span><span class="type-pill">JPG</span></div>
+              </div>
+              <div id="drop-coo" class="drop-zone" onclick="simulateUpload('coo')" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+                <div class="drop-icon">📋</div>
+                <div class="drop-title">Certificate of Origin</div>
+                <div class="drop-sub">Drag & drop or click to upload</div>
+                <div class="drop-types"><span class="type-pill">PDF</span><span class="type-pill">JPG</span></div>
+              </div>
+
+              <!-- Uploaded list -->
+              <div id="file-list" class="file-list" style="margin-top:4px;"></div>
+
+              <!-- Optional -->
+              <div style="font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin:16px 0 10px;">Optional documents</div>
+              <div class="drop-zone" onclick="simulateUpload('packing')">
+                <div class="drop-icon">📦</div>
+                <div class="drop-title">Packing List / Other</div>
+                <div class="drop-sub">Any additional supporting documents</div>
+                <div class="drop-types"><span class="type-pill">PDF</span><span class="type-pill">JPG</span><span class="type-pill">CSV</span></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+            <button class="btn btn-primary" id="run-verify-btn" onclick="goStep(4)">Run AI verification →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Verification -->
+        <div class="step-panel" id="panel-4">
+          <div class="panel">
+            <div class="panel-header">⚙ AI verification — running</div>
+            <div class="panel-body">
+              <p style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:16px;">Both AI agents are analyzing your trade documents. This typically takes 20–40 seconds.</p>
+              <div class="verify-steps" id="verify-steps">
+                <div class="vs-item" id="vs-1">
+                  <div class="vs-icon" id="vi-1" style="background:rgba(0,153,255,0.1);">⬡</div>
+                  <div class="vs-text">Hashing documents + writing to Base testnet...</div>
+                  <div class="vs-status" id="vst-1" style="color:var(--text3);">Queued</div>
+                </div>
+                <div class="vs-item" id="vs-2">
+                  <div class="vs-icon" id="vi-2" style="background:var(--bg4);">⚙</div>
+                  <div class="vs-text">Agent 1 — Verification: checking invoice data...</div>
+                  <div class="vs-status" id="vst-2" style="color:var(--text3);">Queued</div>
+                </div>
+                <div class="vs-item" id="vs-3">
+                  <div class="vs-icon" id="vi-3" style="background:var(--bg4);">⚙</div>
+                  <div class="vs-text">Agent 2 — Document: OCR + hash validation...</div>
+                  <div class="vs-status" id="vst-3" style="color:var(--text3);">Queued</div>
+                </div>
+                <div class="vs-item" id="vs-4">
+                  <div class="vs-icon" id="vi-4" style="background:var(--bg4);">⬡</div>
+                  <div class="vs-text">Combined verdict + smart contract execution...</div>
+                  <div class="vs-status" id="vst-4" style="color:var(--text3);">Queued</div>
+                </div>
+              </div>
+              <div id="verify-result" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5: Complete -->
+        <div class="step-panel" id="panel-5">
+          <div class="panel" style="border-color:rgba(0,212,170,0.2);">
+            <div style="padding:40px 20px;text-align:center;">
+              <div style="font-size:48px;margin-bottom:16px;">✓</div>
+              <div style="font-size:20px;font-weight:600;color:var(--green);margin-bottom:8px;">Trade verified and recorded</div>
+              <div style="font-size:13px;color:var(--text2);font-family:var(--mono);margin-bottom:24px;">TRD-048 has been created, verified by both AI agents, and recorded permanently on Base testnet.</div>
+
+              <div style="background:var(--bg3);border-radius:10px;padding:16px;text-align:left;margin-bottom:24px;border:1px solid var(--border);">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Trade ID</span><span style="color:var(--accent2)">TRD-048</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">TX Hash</span><span style="color:var(--accent2)" id="final-tx">0x—</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Block</span><span id="final-block" style="color:var(--text)">—</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">AI verdict</span><span style="color:var(--green);font-weight:700;">VERIFIED</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Escrow</span><span style="color:var(--green);" id="final-escrow">RELEASED</span></div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:10px;justify-content:center;">
+                <button class="btn btn-ghost" onclick="window.location.href='trade.html'">View trade detail →</button>
+                <button class="btn btn-primary" onclick="window.location.href='index.html'">Back to dashboard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar summary -->
+      <div>
+        <div class="summary-card fade-in" id="summary-card">
+          <div class="sc-title">Trade summary</div>
+          <div class="sc-row"><span class="sc-key">Product</span><span class="sc-val" id="s-product" style="color:var(--text3);">Not set</span></div>
+          <div class="sc-row"><span class="sc-key">Seller</span><span class="sc-val" id="s-mfg" style="color:var(--text3);">Not set</span></div>
+          <div class="sc-row"><span class="sc-key">Buyer</span><span class="sc-val" id="s-buyer" style="color:var(--text3);">Not set</span></div>
+          <div class="sc-row"><span class="sc-key">Route</span><span class="sc-val" id="s-route" style="color:var(--text3);">—</span></div>
+          <div class="sc-row"><span class="sc-key">Quantity</span><span class="sc-val" id="s-qty" style="color:var(--text3);">Not set</span></div>
+          <div class="sc-divider"></div>
+          <div class="sc-total">
+            <span class="sc-total-key">Escrow</span>
+            <span class="sc-total-val" id="s-escrow">$0</span>
+          </div>
+          <div class="sc-note">Funds locked on Base testnet until AI verification passes. Platform fee: 0.5%.</div>
+          <div class="sc-divider"></div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">Documents</div>
+          <div id="s-docs" style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);"><span style="color:var(--text2)">Commercial invoice</span><span id="sd-inv" style="color:var(--text3);">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);"><span style="color:var(--text2)">Bill of lading</span><span id="sd-bol" style="color:var(--text3);">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);"><span style="color:var(--text2)">Certificate of origin</span><span id="sd-coo" style="color:var(--text3);">—</span></div>
+          </div>
+          <div class="sc-divider"></div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Network: Base Testnet · Chain ID: 84532</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="engine.js"></script>
+<script>
+let currentStep = 1;
+const uploadedDocs = [];
+
+// Update flagged nav badge from live data
+const _badge = document.getElementById('nav-flag-count');
+if(_badge) _badge.textContent = TrustTrade.getStats().flagged;
+
+function goStep(n) {
+  document.getElementById('panel-'+currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('panel-'+n).classList.add('active');
+  for(let i=1;i<=5;i++){
+    const c = document.getElementById('sc-'+i);
+    if(i < n){ c.className='step-circle done'; c.textContent='✓'; }
+    else if(i===n){ c.className='step-circle active'; c.textContent=i; }
+    else{ c.className='step-circle todo'; c.textContent=i; }
+    if(i<5){ document.getElementById('conn-'+i).className = i < n ? 'step-connector done' : 'step-connector'; }
+  }
+  if(n === 4) runRealVerification().catch(console.error);
+}
+
+function updateSummary() {
+  const product = document.getElementById('f-product')?.value || '';
+  const mfg = document.getElementById('f-manufacturer')?.value || '';
+  const buyer = document.getElementById('f-buyer')?.value || '';
+  const mfgC = document.getElementById('f-mfg-country')?.value || '';
+  const buyerC = document.getElementById('f-buyer-country')?.value || '';
+  const qty = document.getElementById('f-qty')?.value || '';
+  const escrow = parseFloat(document.getElementById('f-escrow')?.value || 0);
+
+  const set = (id, val, fallback) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = val || fallback;
+    el.style.color = val ? 'var(--text)' : 'var(--text3)';
+  };
+  set('s-product', product, 'Not set');
+  set('s-mfg', mfg, 'Not set');
+  set('s-buyer', buyer, 'Not set');
+  document.getElementById('s-route').textContent = (mfgC && buyerC) ? mfgC+' → '+buyerC : '—';
+  set('s-qty', qty, 'Not set');
+  document.getElementById('s-escrow').textContent = escrow ? '$'+escrow.toLocaleString() : '$0';
+
+  const fee = escrow * 0.005;
+  document.getElementById('fee-principal').textContent = '$'+escrow.toFixed(2);
+  document.getElementById('fee-platform').textContent = '$'+fee.toFixed(2);
+  document.getElementById('fee-seller').textContent = '$'+(escrow - fee).toFixed(2);
+}
+
+const docMeta = {
+  invoice:{ name:'Commercial Invoice', icon:'📄', id:'sd-inv' },
+  bol:    { name:'Bill of Lading',      icon:'🚢', id:'sd-bol' },
+  coo:    { name:'Certificate of Origin', icon:'📋', id:'sd-coo' },
+  packing:{ name:'Packing List',        icon:'📦', id:null },
+};
+const fakeNames = {
+  invoice:'Invoice_TRD_2026.pdf',
+  bol:'BillOfLading_2026.pdf',
+  coo:'CertOrigin_2026.pdf',
+  packing:'PackingList.pdf'
+};
+
+function simulateUpload(type) {
+  const meta = docMeta[type];
+  const list = document.getElementById('file-list');
+  if(document.getElementById('fi-'+type)) return; // already uploaded
+
+  const fakeSize = Math.floor(Math.random() * 2000000 + 500000);
+  const hash = TrustTrade.hashFromString(type + Date.now());
+
+  const item = document.createElement('div');
+  item.className = 'file-item';
+  item.id = 'fi-'+type;
+  item.innerHTML = `
+    <div class="fi-icon">${meta.icon}</div>
+    <div class="fi-info">
+      <div class="fi-name">${meta.name} — ${fakeNames[type]}</div>
+      <div class="fi-meta">Uploading... · Hashing...</div>
+      <div class="fi-bar"><div class="fi-progress" id="fp-${type}"></div></div>
+    </div>
+    <div class="fi-status" style="color:var(--warn)"><div class="spinner"></div></div>`;
+  list.appendChild(item);
+
+  setTimeout(() => { document.getElementById('fp-'+type).style.width = '65%'; }, 100);
+  setTimeout(() => { document.getElementById('fp-'+type).style.width = '100%'; }, 700);
+  setTimeout(() => {
+    item.querySelector('.fi-meta').textContent = `Size: ${(fakeSize/1024/1024).toFixed(1)} MB · Hash: ${hash}`;
+    item.querySelector('.fi-status').innerHTML = `<span style="color:var(--green);font-weight:700;font-size:12px;">✓ HASHED</span>`;
+    item.querySelector('.fi-bar').style.display = 'none';
+    // Register doc in uploadedDocs array
+    uploadedDocs.push({ type, name: fakeNames[type], size: fakeSize, hash, tampered: false });
+    if(meta.id) {
+      document.getElementById(meta.id).textContent = '✓';
+      document.getElementById(meta.id).style.color = 'var(--green)';
+    }
+  }, 1000);
+}
+
+async function runRealVerification() {
+  // Build trade object from form
+  const trade = {
+    id:           TrustTrade.storage.getNextId(),
+    product:      document.getElementById('f-product')?.value || 'Unknown Product',
+    manufacturer: document.getElementById('f-manufacturer')?.value || 'Unknown Seller',
+    buyer:        document.getElementById('f-buyer')?.value || 'Unknown Buyer',
+    mfgCountry:   document.getElementById('f-mfg-country')?.value || '',
+    buyerCountry: document.getElementById('f-buyer-country')?.value || '',
+    category:     document.getElementById('f-category')?.value || 'Other',
+    quantity:     parseFloat(document.getElementById('f-qty')?.value) || 1,
+    pricePerUnit: parseFloat(document.getElementById('f-escrow')?.value || 0) / (parseFloat(document.getElementById('f-qty')?.value) || 1),
+    escrow:       parseFloat(document.getElementById('f-escrow')?.value || 0),
+    invoiceId:    'INV-' + Date.now(),
+    date:         new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
+  };
+
+  const docs = uploadedDocs.length > 0 ? uploadedDocs : [
+    { type:'invoice', name:'Invoice.pdf', size:220000, hash: TrustTrade.hashFromString('inv'+trade.id), tampered:false },
+    { type:'bol',     name:'BOL.pdf',     size:180000, hash: TrustTrade.hashFromString('bol'+trade.id), tampered:false },
+    { type:'coo',     name:'COO.pdf',     size:95000,  hash: TrustTrade.hashFromString('coo'+trade.id), tampered:false },
+  ];
+
+  // ── Step 1: Submit trade to real contract ─────────────────────────────────
+  const st1 = document.getElementById('vst-1');
+  st1.textContent = 'Writing to Base Sepolia...';
+  st1.style.color = 'var(--warn)';
+
+  const submitResult = await TrustChain.submitTrade(trade);
+  const realTxHash    = submitResult?.txHash    || TrustTrade.generateTxHash(trade.id, Date.now());
+  const realBlock     = submitResult?.blockNumber || TrustTrade.generateBlockNumber();
+
+  st1.textContent = submitResult ? '✓ DONE (on-chain)' : '✓ DONE (demo)';
+  st1.style.color = 'var(--green)';
+  document.getElementById('vs-1').style.borderColor = 'rgba(0,212,170,0.2)';
+
+  // ── Step 2 & 3: Run AI agents ─────────────────────────────────────────────
+  const result   = TrustTrade.runVerification(trade, docs);
+  const a1       = result.agent1;
+  const a2       = result.agent2;
+
+  await new Promise(r => setTimeout(r, 1200));
+  const st2 = document.getElementById('vst-2');
+  st2.textContent = 'Running...'; st2.style.color = 'var(--warn)';
+  await new Promise(r => setTimeout(r, 1000));
+  st2.textContent = a1.passed ? `✓ PASS (${a1.score}%)` : `✗ FAIL (${a1.score}%)`;
+  st2.style.color = a1.passed ? 'var(--green)' : 'var(--danger)';
+  document.getElementById('vs-2').style.borderColor = a1.passed ? 'rgba(0,212,170,0.2)' : 'rgba(255,77,106,0.2)';
+
+  await new Promise(r => setTimeout(r, 600));
+  const st3 = document.getElementById('vst-3');
+  st3.textContent = 'Running...'; st3.style.color = 'var(--warn)';
+  await new Promise(r => setTimeout(r, 1000));
+  st3.textContent = a2.passed ? `✓ PASS (${a2.score}%)` : `✗ FAIL (${a2.score}%)`;
+  st3.style.color = a2.passed ? 'var(--green)' : 'var(--danger)';
+  document.getElementById('vs-3').style.borderColor = a2.passed ? 'rgba(0,212,170,0.2)' : 'rgba(255,77,106,0.2)';
+
+  // ── Step 4: Write verdict to real contract ────────────────────────────────
+  await new Promise(r => setTimeout(r, 600));
+  const st4 = document.getElementById('vst-4');
+  st4.textContent = 'Recording verdict on-chain...'; st4.style.color = 'var(--warn)';
+
+  const verifyResult = await TrustChain.recordVerification(trade, result);
+  const finalTxHash  = verifyResult?.txHash    || realTxHash;
+  const finalBlock   = verifyResult?.blockNumber || realBlock;
+
+  st4.textContent = result.passed ? '✓ CONFIRMED' : '✗ BLOCKED';
+  st4.style.color = result.passed ? 'var(--green)' : 'var(--danger)';
+  document.getElementById('vs-4').style.borderColor = result.passed ? 'rgba(0,212,170,0.2)' : 'rgba(255,77,106,0.2)';
+
+  // ── Show flags if failed ──────────────────────────────────────────────────
+  if (!result.passed && result.flags.length > 0) {
+    const container = document.getElementById('verify-result');
+    container.style.display = 'block';
+    container.innerHTML = `
+      <div style="margin-top:16px;padding:14px;background:rgba(255,77,106,0.06);border:1px solid rgba(255,77,106,0.2);border-radius:8px;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--danger);font-weight:700;margin-bottom:10px;">⚑ ${result.flags.length} flag${result.flags.length > 1 ? 's' : ''} detected</div>
+        ${result.flags.map(f => `
+          <div style="margin-bottom:8px;padding:8px 10px;background:var(--bg3);border-radius:6px;">
+            <div style="font-size:12px;font-weight:600;color:var(--danger);margin-bottom:2px;">${f.title}</div>
+            <div style="font-size:11px;color:var(--text2);font-family:var(--mono);">${f.detail}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;">${f.agent}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  // ── Save locally + show final screen ─────────────────────────────────────
+  trade.status  = result.passed ? 'verified' : 'flagged';
+  trade.aiScore = result.score;
+  trade.agent1  = a1.passed ? 'pass' : 'fail';
+  trade.agent2  = a2.passed ? 'pass' : 'fail';
+  trade.txHash  = finalTxHash;
+  TrustTrade.storage.addTrade(trade);
+
+  // Show real tx hash — clickable link to Basescan
+  const txEl = document.getElementById('final-tx');
+  txEl.innerHTML = `<a href="https://sepolia.basescan.org/tx/${finalTxHash}" target="_blank" style="color:var(--accent2);text-decoration:none;">${finalTxHash.slice(0,18)}...↗</a>`;
+  document.getElementById('final-block').textContent = '#' + finalBlock;
+  document.getElementById('final-escrow').textContent = result.passed ? 'RELEASED' : 'HELD';
+  document.getElementById('final-escrow').style.color = result.passed ? 'var(--green)' : 'var(--warn)';
+
+  document.querySelector('#panel-5 .cf-value') && (document.querySelector('#panel-5 .cf-value').textContent = trade.id);
+  goStep(5);
+}
+</script>
+<script src="auth.js"></script>
+<script>
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  TrustAuth.requireAuth();
+
+  // ── Role-based UI setup ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = TrustAuth.currentUser();
+    if (!user) return;
+
+    // Populate sidebar user badge
+    const badgeEl = document.getElementById('sidebar-user-badge');
+    if (badgeEl) {
+      badgeEl.querySelector('.suf-avatar').textContent = user.avatar || user.name.slice(0,2).toUpperCase();
+      badgeEl.querySelector('.suf-name').textContent = user.name;
+      badgeEl.querySelector('.suf-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1) + ' · ' + user.company;
+    }
+
+    // Apply role-based visibility
+    applyRoleBasedVisibility(user);
+  });
+
+  function applyRoleBasedVisibility(user) {
+    // Navigation items visibility
+    const navItems = {
+      'nav-agents': document.querySelector('.nav-item[onclick*="agents.html"]'),
+      'nav-flagged': document.querySelector('.nav-item[onclick*="flagged.html"]'),
+      'create-trade-btn': document.querySelector('.nav-item[onclick*="submit.html"]'),
+      'escrow-deposit-btn': document.querySelector('.nav-item[onclick*="escrow.html"]'),
+      'explorer-link': document.querySelector('.nav-item[onclick*="explorer.html"]')
+    };
+
+    Object.entries(navItems).forEach(([id, element]) => {
+      if (element && !TrustAuth.shouldShowComponent(id, user)) {
+        element.style.display = 'none';
+      }
+    });
+  }
+
+  async function connectWallet() {
+    const ok = await TrustChain.connect();
+    document.getElementById('wallet-status').textContent =
+      ok ? '✅ Connected to Base Sepolia' : '❌ Wrong network or no wallet';
+  }
+</script>
+</body>
+</html>

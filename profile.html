@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Profile — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#090d12;--bg2:#0e1420;--bg3:#131b26;--bg4:#1a2333;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#e8edf5;--text2:#7a8a9e;--text3:#4a5668;--accent:#00d4aa;--accent2:#0099ff;--danger:#ff4d6a;--warn:#ffaa00;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,170,0.015)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.015)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(0,212,170,0.06);top:-100px;right:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(0,153,255,0.05);bottom:-100px;left:-80px;}
+  .shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .logo-mark{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+  .nav-section{padding:0 12px;margin-bottom:24px;}
+  .nav-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:0 8px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all 0.15s;border:1px solid transparent;margin-bottom:2px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.2);color:var(--accent);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+  .chain-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .chain-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+  .main{flex:1;padding:32px 36px;overflow-y:auto;}
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-size:22px;font-weight:600;}
+  .page-sub{font-size:13px;color:var(--text2);margin-top:4px;font-family:var(--mono);}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:var(--sans);}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{background:var(--bg3);color:var(--text);}
+  .btn-primary{background:var(--accent);color:#000;font-weight:600;}
+  .btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-danger:hover{opacity:0.88;}
+
+  /* Profile Layout */
+  .profile-grid{display:grid;grid-template-columns:300px 1fr;gap:32px;max-width:1200px;}
+  .profile-sidebar{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:20px;}
+  .avatar-section{text-align:center;}
+  .avatar{display:inline-flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--mono);font-size:24px;font-weight:700;margin-bottom:16px;}
+  .user-name{font-size:18px;font-weight:600;margin-bottom:4px;}
+  .user-role{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(0,212,170,0.1);color:var(--accent);font-size:11px;font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+  .user-company{font-size:13px;color:var(--text2);margin-top:8px;}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+  .stat-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+  .stat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);}
+  .stat-label{font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.04em;margin-top:4px;}
+
+  .profile-content{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:32px;}
+  .section{margin-bottom:32px;}
+  .section:last-child{margin-bottom:0;}
+  .section-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .section-icon{color:var(--accent);font-size:14px;}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+  .form-group{display:flex;flex-direction:column;gap:8px;}
+  .form-label{font-size:13px;color:var(--text2);font-weight:500;}
+  .form-input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:all 0.15s;}
+  .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,0.1);}
+  .form-textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;resize:vertical;min-height:80px;transition:all 0.15s;}
+  .form-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,0.1);}
+  .form-select{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:all 0.15s;}
+  .form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,0.1);}
+  .tag-input{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;min-height:48px;}
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:16px;background:var(--accent);color:#000;font-size:12px;font-family:var(--mono);font-weight:600;}
+  .tag-remove{cursor:pointer;color:#000;opacity:0.7;}
+  .tag-remove:hover{opacity:1;}
+  .tag-add{background:transparent;border:none;color:var(--text2);font-family:var(--sans);font-size:14px;outline:none;flex:1;min-width:100px;}
+
+  .actions{display:flex;gap:12px;margin-top:24px;}
+  .readonly-notice{background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.3);border-radius:8px;padding:12px;margin-bottom:16px;}
+  .readonly-notice p{font-size:13px;color:var(--warn);margin:0;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn 0.35s ease both;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" onclick="window.location.href='index.html'">TrustTrade</div>
+      <div class="logo-sub">Supply Chain Verification</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Platform</div>
+      <div class="nav-item" onclick="window.location.href='index.html'">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="window.location.href='trades.html'">
+        <span class="nav-icon">📊</span> All Trades
+      </div>
+      <div class="nav-item" onclick="window.location.href='flagged.html'">
+        <span class="nav-icon">🚩</span> Flagged
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Actions</div>
+      <div class="nav-item" onclick="window.location.href='submit.html'">
+        <span class="nav-icon">＋</span> Create Trade
+      </div>
+      <div class="nav-item" onclick="window.location.href='escrow.html'">
+        <span class="nav-icon">💰</span> Escrow
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Tools</div>
+      <div class="nav-item" onclick="window.location.href='explorer.html'">
+        <span class="nav-icon">🔍</span> Explorer
+      </div>
+      <div class="nav-item" onclick="window.location.href='agents.html'">
+        <span class="nav-icon">🤖</span> Agents
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <div class="nav-item active">
+        <span class="nav-icon">👤</span> Profile
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="chain-badge">
+        <div class="chain-dot"></div>
+        Live on Ethereum
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Profile Settings</div>
+        <div class="page-sub">Manage your account details and preferences</div>
+      </div>
+      <div title="Sign out" onclick="TrustAuth.logoutUser()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+    </div>
+
+    <div class="profile-grid">
+      <!-- Profile Sidebar -->
+      <div class="profile-sidebar">
+        <div class="avatar-section">
+          <div class="avatar" id="userAvatar">JD</div>
+          <div class="user-name" id="userName">John Doe</div>
+          <div class="user-role" id="userRole">
+            <span>●</span> Buyer
+          </div>
+          <div class="user-company" id="userCompany">Demo Company</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-val" id="tradesCount">0</div>
+            <div class="stat-label">Trades</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="escrowTotal">$0</div>
+            <div class="stat-label">Escrow</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Content -->
+      <div class="profile-content">
+        <div class="readonly-notice" id="readonlyNotice" style="display:none;">
+          <p>Demo accounts cannot be modified. Create a real account to update your profile.</p>
+        </div>
+
+        <!-- Basic Information -->
+        <div class="section">
+          <div class="section-title">
+            <span class="section-icon">📋</span> Basic Information
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" id="inputName" placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-input" id="inputEmail" placeholder="Enter your email" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" class="form-input" id="inputPhone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-input" id="inputLocation" placeholder="City, Country">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Company</label>
+              <input type="text" class="form-input" id="inputCompany" placeholder="Company name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <input type="url" class="form-input" id="inputWebsite" placeholder="https://example.com">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div class="section">
+          <div class="section-title">
+            <span class="section-icon">📝</span> Bio
+          </div>
+          <div class="form-group">
+            <textarea class="form-textarea" id="inputBio" placeholder="Tell us about yourself..." rows="3"></textarea>
+          </div>
+        </div>
+
+        <!-- Role-Specific Fields -->
+        <div class="section" id="roleSpecificSection">
+          <!-- Dynamic content based on role -->
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button class="btn btn-primary" id="saveBtn" onclick="saveProfile()">
+            <span>💾</span> Save Changes
+          </button>
+          <button class="btn btn-ghost" onclick="resetForm()">
+            <span>↻</span> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script src="engine.js"></script>
+<script>
+TrustAuth.requireAuth();
+let currentUser = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  currentUser = TrustAuth.currentUser();
+  if (!currentUser) return;
+
+  loadProfile();
+
+  // Role-based UI adjustments
+  const appVersion = TrustAuth.getAppVersion(currentUser);
+  document.body.classList.add(`app-${appVersion}`);
+
+  // Hide/show components based on permissions
+  const components = document.querySelectorAll('[data-permission]');
+  components.forEach(el => {
+    const perm = el.dataset.permission;
+    if (!TrustAuth.checkPermission(perm, currentUser)) {
+      el.style.display = 'none';
+    }
+  });
+});
+
+function loadProfile() {
+  // Update sidebar
+  document.getElementById('userAvatar').textContent = currentUser.avatar;
+  document.getElementById('userName').textContent = currentUser.name;
+  document.getElementById('userCompany').textContent = currentUser.company;
+
+  const roleDisplay = currentUser.role === 'manufacturer' ? 'Manufacturer' : 'Buyer';
+  document.getElementById('userRole').innerHTML = `<span>●</span> ${roleDisplay}`;
+
+  // Check if readonly
+  const isReadOnly = currentUser.isGuest || currentUser.isMock;
+  if (isReadOnly) {
+    document.getElementById('readonlyNotice').style.display = 'block';
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('saveBtn').textContent = 'Demo Account';
+  }
+
+  // Load form data
+  document.getElementById('inputName').value = currentUser.name || '';
+  document.getElementById('inputEmail').value = currentUser.email || '';
+  document.getElementById('inputPhone').value = currentUser.phone || '';
+  document.getElementById('inputLocation').value = currentUser.location || '';
+  document.getElementById('inputCompany').value = currentUser.company || '';
+  document.getElementById('inputWebsite').value = currentUser.website || '';
+  document.getElementById('inputBio').value = currentUser.bio || '';
+
+  // Load role-specific data
+  loadRoleSpecificData();
+
+  // Load stats (mock data for now)
+  document.getElementById('tradesCount').textContent = '12';
+  document.getElementById('escrowTotal').textContent = '$45K';
+}
+
+function loadRoleSpecificData() {
+  const section = document.getElementById('roleSpecificSection');
+  section.innerHTML = '';
+
+  if (currentUser.role === 'manufacturer') {
+    section.innerHTML = `
+      <div class="section-title">
+        <span class="section-icon">🏭</span> Manufacturer Details
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Certifications</label>
+          <div class="tag-input" id="certificationsTags">
+            ${(currentUser.manufacturer?.certifications || []).map(cert =>
+              `<span class="tag">${cert} <span class="tag-remove" onclick="removeTag('certifications', '${cert}')">×</span></span>`
+            ).join('')}
+            <input type="text" class="tag-add" placeholder="Add certification..." onkeydown="addTag(event, 'certifications')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product Categories</label>
+          <div class="tag-input" id="categoriesTags">
+            ${(currentUser.manufacturer?.productCategories || []).map(cat =>
+              `<span class="tag">${cat} <span class="tag-remove" onclick="removeTag('productCategories', '${cat}')">×</span></span>`
+            ).join('')}
+            <input type="text" class="tag-add" placeholder="Add category..." onkeydown="addTag(event, 'productCategories')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Annual Revenue</label>
+          <select class="form-select" id="inputRevenue">
+            <option value="">Select revenue range</option>
+            <option value="<1M USD">Less than $1M</option>
+            <option value="1-5M USD">$1-5M</option>
+            <option value="5-10M USD">$5-10M</option>
+            <option value="10-50M USD">$10-50M</option>
+            <option value="50M+ USD">$50M+</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    if (currentUser.manufacturer?.annualRevenue) {
+      document.getElementById('inputRevenue').value = currentUser.manufacturer.annualRevenue;
+    }
+  } else {
+    section.innerHTML = `
+      <div class="section-title">
+        <span class="section-icon">🛒</span> Buyer Preferences
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Preferred Categories</label>
+          <div class="tag-input" id="categoriesTags">
+            ${(currentUser.buyer?.preferredCategories || []).map(cat =>
+              `<span class="tag">${cat} <span class="tag-remove" onclick="removeTag('preferredCategories', '${cat}')">×</span></span>`
+            ).join('')}
+            <input type="text" class="tag-add" placeholder="Add category..." onkeydown="addTag(event, 'preferredCategories')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trade Volume</label>
+          <select class="form-select" id="inputVolume">
+            <option value="">Select volume range</option>
+            <option value="<100K USD">Less than $100K</option>
+            <option value="100K-1M USD">$100K-1M</option>
+            <option value="1-10M USD">$1-10M</option>
+            <option value="10M+ USD">$10M+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Risk Tolerance</label>
+          <select class="form-select" id="inputRisk">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    if (currentUser.buyer?.tradeVolume) {
+      document.getElementById('inputVolume').value = currentUser.buyer.tradeVolume;
+    }
+    if (currentUser.buyer?.riskTolerance) {
+      document.getElementById('inputRisk').value = currentUser.buyer.riskTolerance;
+    }
+  }
+}
+
+function addTag(event, field) {
+  if (event.key === 'Enter' || event.key === ',') {
+    event.preventDefault();
+    const input = event.target;
+    const value = input.value.trim();
+    if (value) {
+      const tagsContainer = input.parentElement;
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.innerHTML = `${value} <span class="tag-remove" onclick="removeTag('${field}', '${value}')">×</span>`;
+      tagsContainer.insertBefore(tag, input);
+      input.value = '';
+    }
+  }
+}
+
+function removeTag(field, value) {
+  // This would be handled during save
+  event.target.parentElement.remove();
+}
+
+async function saveProfile() {
+  if (currentUser.isGuest || currentUser.isMock) return;
+
+  const updates = {
+    name: document.getElementById('inputName').value.trim(),
+    phone: document.getElementById('inputPhone').value.trim(),
+    location: document.getElementById('inputLocation').value.trim(),
+    company: document.getElementById('inputCompany').value.trim(),
+    website: document.getElementById('inputWebsite').value.trim(),
+    bio: document.getElementById('inputBio').value.trim()
+  };
+
+  // Collect role-specific data
+  if (currentUser.role === 'manufacturer') {
+    const certifications = Array.from(document.querySelectorAll('#certificationsTags .tag'))
+      .map(tag => tag.textContent.replace(' ×', ''));
+    const categories = Array.from(document.querySelectorAll('#categoriesTags .tag'))
+      .map(tag => tag.textContent.replace(' ×', ''));
+
+    updates.certifications = certifications;
+    updates.productCategories = categories;
+    updates.annualRevenue = document.getElementById('inputRevenue').value;
+  } else {
+    const categories = Array.from(document.querySelectorAll('#categoriesTags .tag'))
+      .map(tag => tag.textContent.replace(' ×', ''));
+
+    updates.preferredCategories = categories;
+    updates.tradeVolume = document.getElementById('inputVolume').value;
+    updates.riskTolerance = document.getElementById('inputRisk').value;
+  }
+
+  try {
+    await TrustAuth.updateUserProfile(currentUser.id, updates);
+    currentUser = TrustAuth.currentUser();
+    loadProfile();
+    alert('Profile updated successfully!');
+  } catch (error) {
+    alert('Error updating profile: ' + error.message);
+  }
+}
+
+function resetForm() {
+  loadProfile();
+}
+</script>
+</body>
+</html>

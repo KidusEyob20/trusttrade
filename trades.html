@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>All Trades — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#090d12;--bg2:#0e1420;--bg3:#131b26;--bg4:#1a2333;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#e8edf5;--text2:#7a8a9e;--text3:#4a5668;--accent:#00d4aa;--accent2:#0099ff;--danger:#ff4d6a;--warn:#ffaa00;--green:#00d4aa;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,170,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(0,212,170,0.06);top:-100px;right:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(0,153,255,0.05);bottom:-100px;left:-80px;}
+  .shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .logo-mark{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+  .nav-section{padding:0 12px;margin-bottom:24px;}
+  .nav-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:0 8px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all 0.15s;border:1px solid transparent;margin-bottom:2px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.2);color:var(--accent);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+  .chain-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .chain-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+  .main{flex:1;padding:32px 36px;overflow-y:auto;}
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-size:22px;font-weight:600;}
+  .page-sub{font-size:13px;color:var(--text2);margin-top:4px;font-family:var(--mono);}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:var(--sans);}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{background:var(--bg3);color:var(--text);}
+  .btn-primary{background:var(--accent);color:#000;font-weight:600;}
+  .btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+
+  /* Filter bar */
+  .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .search-box{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;flex:1;min-width:200px;}
+  .search-box input{background:transparent;border:none;outline:none;color:var(--text);font-family:var(--sans);font-size:13px;width:100%;}
+  .search-box input::placeholder{color:var(--text3);}
+  .search-icon{color:var(--text3);font-size:14px;}
+  .filter-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-family:var(--mono);cursor:pointer;border:1px solid var(--border);color:var(--text2);background:var(--bg2);transition:all 0.15s;}
+  .filter-chip:hover{border-color:var(--border2);color:var(--text);}
+  .filter-chip.active{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.3);color:var(--accent);}
+  .filter-chip.danger{background:rgba(255,77,106,0.08);border-color:rgba(255,77,106,0.3);color:var(--danger);}
+  .filter-chip.warn{background:rgba(255,170,0,0.08);border-color:rgba(255,170,0,0.3);color:var(--warn);}
+
+  /* Stats mini row */
+  .mini-stats{display:flex;gap:12px;margin-bottom:20px;}
+  .mini-stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+  .ms-val{font-family:var(--mono);font-size:18px;font-weight:700;}
+  .ms-label{font-size:11px;color:var(--text2);font-family:var(--mono);}
+
+  /* Table */
+  .panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);font-weight:400;padding:12px 20px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  thead th.sortable{cursor:pointer;}
+  thead th.sortable:hover{color:var(--text2);}
+  tbody td{padding:14px 20px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr{cursor:pointer;transition:background 0.12s;}
+  tbody tr:hover td{background:rgba(255,255,255,0.025);}
+  .trade-id{font-family:var(--mono);font-size:12px;color:var(--accent2);}
+  .trade-product{font-weight:500;color:var(--text);}
+  .trade-route{font-size:11px;color:var(--text2);margin-top:2px;font-family:var(--mono);}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:0.04em;white-space:nowrap;}
+  .badge-verified{background:rgba(0,212,170,0.1);color:var(--green);border:1px solid rgba(0,212,170,0.2);}
+  .badge-flagged{background:rgba(255,77,106,0.1);color:var(--danger);border:1px solid rgba(255,77,106,0.2);}
+  .badge-pending{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.2);}
+  .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+  .amount{font-family:var(--mono);font-size:12px;font-weight:600;}
+  .amount-sub{font-size:10px;color:var(--text3);font-family:var(--mono);}
+  .confidence-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;width:60px;margin-top:3px;}
+  .cb-fill{height:100%;border-radius:2px;}
+  .date-cell{font-family:var(--mono);font-size:11px;color:var(--text2);}
+  .arrow-cell{color:var(--text3);font-size:16px;text-align:right;}
+
+  /* Pagination */
+  .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--border);}
+  .page-info{font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .page-btns{display:flex;gap:6px;}
+  .page-btn{padding:5px 12px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:transparent;transition:all 0.12s;}
+  .page-btn:hover{background:var(--bg3);color:var(--text);}
+  .page-btn.active{background:rgba(0,212,170,0.1);border-color:rgba(0,212,170,0.3);color:var(--accent);}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn 0.35s ease both;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" onclick="window.location.href='index.html'">TrustTrade</div>
+      <div class="logo-sub">v0.1 · Base Testnet</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">◈</span> Dashboard</div>
+      <div class="nav-item active"><span class="nav-icon">⬡</span> All Trades</div>
+      <div class="nav-item" onclick="window.location.href='flagged.html'"><span class="nav-icon">⚑</span> Flagged<span id="nav-flag-count" style="margin-left:auto;background:rgba(255,77,106,0.15);color:var(--danger);font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:10px;">2</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Actions</div>
+
+      <div class="nav-item" onclick="window.location.href='submit.html'"><span class="nav-icon">＋</span> Create Trade</div>
+      <div class="nav-item" onclick="window.location.href='escrow.html'"><span class="nav-icon">◎</span> Deposit Escrow</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="window.location.href='explorer.html'"><span class="nav-icon">⬡</span> Block Explorer</div>
+      <div class="nav-item" onclick="window.location.href='agents.html'"><span class="nav-icon">⚙</span> AI Agents</div>
+      <div class="nav-item" onclick="window.location.href='profile.html'"><span class="nav-icon">👤</span> Profile</div>
+    </div>
+    <div class="sidebar-footer">
+          <div id="sidebar-user-badge" style="padding:12px 16px 0;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131b26;border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:default;">
+        <div class="suf-avatar" style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#00d4aa;flex-shrink:0;">??</div>
+        <div style="flex:1;min-width:0;">
+          <div class="suf-name" style="font-size:12px;font-weight:600;color:#e8edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
+          <div class="suf-role" style="font-size:9px;color:#4a5668;font-family:'Space Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        </div>
+        <div title="Sign out" onclick="TrustAuth.logoutUser()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button onclick="connectWallet()" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#090d12;font-size:13px;font-weight:600;border:none;cursor:pointer;">Connect Wallet</button>
+      <span id="wallet-status" style="display:block;margin-top:5px;font-size:11px;color:var(--text3);text-align:center;">Not connected</span>
+    </div>
+    <div class="chain-badge"><div class="chain-dot"></div>Base Testnet · Block #4,821,107</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header fade-in">
+      <div>
+        <div class="page-title">All Trades</div>
+        <div class="page-sub">47 total trades · Base Testnet</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost">↓ Export CSV</button>
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">＋ New Trade</button>
+      </div>
+    </div>
+
+    <!-- Mini stats -->
+    <div class="mini-stats fade-in">
+      <div class="mini-stat">
+        <div><div class="ms-val" style="color:var(--text)">47</div><div class="ms-label">Total trades</div></div>
+      </div>
+      <div class="mini-stat">
+        <div><div class="ms-val" style="color:var(--green)">41</div><div class="ms-label">Verified</div></div>
+      </div>
+      <div class="mini-stat">
+        <div><div class="ms-val" style="color:var(--warn)">4</div><div class="ms-label">Pending</div></div>
+      </div>
+      <div class="mini-stat">
+        <div><div class="ms-val" style="color:var(--danger)">2</div><div class="ms-label">Flagged</div></div>
+      </div>
+      <div class="mini-stat" style="margin-left:auto;">
+        <div><div class="ms-val" style="color:var(--accent)">$842K</div><div class="ms-label">Total volume</div></div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar fade-in">
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search-input" placeholder="Search by trade ID, product, or company..." oninput="filterTrades()"/>
+      </div>
+      <div class="filter-chip active" id="chip-all" onclick="setFilter('all')">All (47)</div>
+      <div class="filter-chip" id="chip-verified" onclick="setFilter('verified')">✓ Verified (41)</div>
+      <div class="filter-chip warn" id="chip-pending" onclick="setFilter('pending')">◌ Pending (4)</div>
+      <div class="filter-chip danger" id="chip-flagged" onclick="setFilter('flagged')">⚑ Flagged (2)</div>
+    </div>
+
+    <!-- Table -->
+    <div class="panel fade-in">
+      <div class="table-wrap">
+        <table id="trades-table">
+          <thead>
+            <tr>
+              <th class="sortable">Trade ID ↕</th>
+              <th>Product</th>
+              <th>Route</th>
+              <th class="sortable">Escrow ↕</th>
+              <th>AI Score</th>
+              <th class="sortable">Date ↕</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="trades-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info" id="page-info">Showing 1–15 of 47 trades</div>
+        <div class="page-btns">
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">4</button>
+          <span style="color:var(--text3);font-family:var(--mono);font-size:11px;padding:0 4px;">…</span>
+          <button class="page-btn">→</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="engine.js"></script>
+<script>
+let currentFilter = 'all';
+
+function init() {
+  const s = TrustTrade.getStats();
+  document.querySelector('.page-sub').textContent = `${s.total} total trades · Base Testnet`;
+  // update mini stats
+  const vals = document.querySelectorAll('.ms-val');
+  if(vals[0]) vals[0].textContent = s.total;
+  if(vals[1]) vals[1].textContent = s.verified;
+  if(vals[2]) vals[2].textContent = s.pending;
+  if(vals[3]) vals[3].textContent = s.flagged;
+  // update chips
+  document.getElementById('chip-all').textContent = `All (${s.total})`;
+  document.getElementById('chip-verified').textContent = `✓ Verified (${s.verified})`;
+  document.getElementById('chip-pending').textContent = `◌ Pending (${s.pending})`;
+  document.getElementById('chip-flagged').textContent = `⚑ Flagged (${s.flagged})`;
+  // update nav badge
+  const badge = document.getElementById('nav-flag-count');
+  if(badge) badge.textContent = s.flagged;
+  filterTrades();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  ['all','verified','pending','flagged'].forEach(x => {
+    const chip = document.getElementById('chip-'+x);
+    chip.classList.remove('active');
+    if(x === f) chip.classList.add('active');
+  });
+  filterTrades();
+}
+
+function filterTrades() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const all = TrustTrade.storage.getTrades();
+  const filtered = all.filter(t => {
+    const matchFilter = currentFilter === 'all' || t.status === currentFilter;
+    const matchSearch = !q ||
+      t.id.toLowerCase().includes(q) ||
+      t.product.toLowerCase().includes(q) ||
+      (t.manufacturer||'').toLowerCase().includes(q) ||
+      (t.buyer||'').toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+  renderTrades(filtered);
+}
+
+function renderTrades(list) {
+  const body = document.getElementById('trades-body');
+  document.getElementById('page-info').textContent = `Showing 1–${list.length} of ${list.length} trades`;
+  body.innerHTML = list.map(t => {
+    const score = t.aiScore;
+    const badgeClass = t.status === 'verified' ? 'badge-verified' : t.status === 'flagged' ? 'badge-flagged' : 'badge-pending';
+    const badgeLabel = t.status === 'verified' ? '✓ VERIFIED' : t.status === 'flagged' ? '⚑ FLAGGED' : '◌ PENDING';
+    const scoreColor = !score ? 'var(--text3)' : score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--warn)' : 'var(--danger)';
+    const fillColor = !score ? 'var(--bg4)' : score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--warn)' : 'var(--danger)';
+    return `<tr onclick="window.location.href='trade.html?id=${t.id}'">
+      <td><div class="trade-id">${t.id}</div></td>
+      <td><div class="trade-product">${t.product}</div></td>
+      <td><div class="trade-route">${t.manufacturer} → ${t.buyer}</div></td>
+      <td><div class="amount">$${t.escrow.toLocaleString()}</div><div class="amount-sub">USDC</div></td>
+      <td>${score != null
+        ? `<div style="font-family:var(--mono);font-size:12px;color:${scoreColor}">${score}%</div>
+           <div class="confidence-bar"><div class="cb-fill" style="width:${score}%;background:${fillColor}"></div></div>`
+        : `<div style="font-family:var(--mono);font-size:11px;color:var(--text3)">—</div>`}
+      </td>
+      <td><div class="date-cell">${t.date}</div></td>
+      <td><span class="badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></td>
+      <td class="arrow-cell">›</td>
+    </tr>`;
+  }).join('');
+}
+
+init();
+</script>
+<script src="auth.js"></script>
+<script>
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  TrustAuth.requireAuth();
+
+  // ── Role-based UI setup ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = TrustAuth.currentUser();
+    if (!user) return;
+
+    // Populate sidebar user badge
+    const badgeEl = document.getElementById('sidebar-user-badge');
+    if (badgeEl) {
+      badgeEl.querySelector('.suf-avatar').textContent = user.avatar || user.name.slice(0,2).toUpperCase();
+      badgeEl.querySelector('.suf-name').textContent = user.name;
+      badgeEl.querySelector('.suf-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1) + ' · ' + user.company;
+    }
+
+    // Apply role-based visibility
+    applyRoleBasedVisibility(user);
+  });
+
+  function applyRoleBasedVisibility(user) {
+    // Navigation items visibility
+    const navItems = {
+      'nav-agents': document.querySelector('.nav-item[onclick*="agents.html"]'),
+      'nav-flagged': document.querySelector('.nav-item[onclick*="flagged.html"]'),
+      'create-trade-btn': document.querySelector('.nav-item[onclick*="submit.html"]'),
+      'escrow-deposit-btn': document.querySelector('.nav-item[onclick*="escrow.html"]'),
+      'explorer-link': document.querySelector('.nav-item[onclick*="explorer.html"]'),
+      'profile-link': document.querySelector('.nav-item[onclick*="profile.html"]')
+    };
+
+    Object.entries(navItems).forEach(([id, element]) => {
+      if (element && !TrustAuth.shouldShowComponent(id, user)) {
+        element.style.display = 'none';
+      }
+    });
+  }
+
+  async function connectWallet() {
+    const ok = await TrustChain.connect();
+    document.getElementById('wallet-status').textContent =
+      ok ? '✅ Connected to Base Sepolia' : '❌ Wrong network or no wallet';
+  }
+</script>
+</body>
+</html>

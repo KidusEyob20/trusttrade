@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trade Detail — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#090d12;--bg2:#0e1420;--bg3:#131b26;--bg4:#1a2333;
+    --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+    --text:#e8edf5;--text2:#7a8a9e;--text3:#4a5668;
+    --accent:#00d4aa;--accent2:#0099ff;
+    --danger:#ff4d6a;--warn:#ffaa00;--green:#00d4aa;
+    --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,170,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(0,212,170,0.06);top:-100px;right:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(0,153,255,0.05);bottom:-100px;left:-80px;}
+  .shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+
+  /* Sidebar — same as dashboard */
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .logo-mark{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+  .nav-section{padding:0 12px;margin-bottom:24px;}
+  .nav-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:0 8px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all 0.15s;border:1px solid transparent;margin-bottom:2px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.2);color:var(--accent);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+  .chain-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .chain-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+
+  /* Main */
+  .main{flex:1;padding:32px 36px;overflow-y:auto;}
+
+  /* Breadcrumb */
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:24px;}
+  .breadcrumb a{color:var(--text2);cursor:pointer;text-decoration:none;}
+  .breadcrumb a:hover{color:var(--accent);}
+  .breadcrumb-sep{color:var(--text3);}
+  .breadcrumb-current{color:var(--accent);}
+
+  /* Trade header */
+  .trade-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:20px;}
+  .trade-id-block{}
+  .trade-id-label{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+  .trade-id-value{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--accent2);letter-spacing:0.04em;}
+  .trade-product-name{font-size:18px;font-weight:600;color:var(--text);margin-top:4px;}
+  .trade-parties-row{display:flex;align-items:center;gap:12px;margin-top:8px;}
+  .party-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);font-family:var(--mono);}
+  .arrow-chip{color:var(--text3);font-size:16px;}
+  .trade-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--mono);font-weight:700;letter-spacing:0.04em;}
+  .badge-verified{background:rgba(0,212,170,0.1);color:var(--green);border:1px solid rgba(0,212,170,0.2);}
+  .badge-flagged{background:rgba(255,77,106,0.1);color:var(--danger);border:1px solid rgba(255,77,106,0.2);}
+  .badge-pending{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.2);}
+  .badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:var(--sans);}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{background:var(--bg3);color:var(--text);}
+  .btn-primary{background:var(--accent);color:#000;font-weight:600;}
+  .btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+  .btn-danger{background:var(--danger);color:#fff;font-weight:600;}
+  .btn-danger:hover{opacity:0.85;}
+
+  /* Stats strip */
+  .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;transition:border-color 0.2s;}
+  .stat-card:hover{border-color:var(--border2);}
+  .stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--mono);margin-bottom:8px;}
+  .stat-value{font-size:20px;font-weight:600;font-family:var(--mono);line-height:1;}
+  .stat-sub{font-size:10px;color:var(--text2);margin-top:5px;font-family:var(--mono);}
+
+  /* Panel */
+  .panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);}
+  .panel-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .panel-action{font-size:12px;color:var(--accent);cursor:pointer;font-family:var(--mono);}
+
+  /* Timeline */
+  .timeline{padding:20px 24px;}
+  .timeline-item{display:flex;gap:16px;position:relative;padding-bottom:24px;}
+  .timeline-item:last-child{padding-bottom:0;}
+  .timeline-item:last-child .tl-line{display:none;}
+  .tl-left{display:flex;flex-direction:column;align-items:center;width:32px;flex-shrink:0;}
+  .tl-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;z-index:1;}
+  .tl-dot-green{background:rgba(0,212,170,0.15);border:1px solid rgba(0,212,170,0.3);color:var(--green);}
+  .tl-dot-blue{background:rgba(0,153,255,0.12);border:1px solid rgba(0,153,255,0.25);color:var(--accent2);}
+  .tl-dot-warn{background:rgba(255,170,0,0.12);border:1px solid rgba(255,170,0,0.25);color:var(--warn);}
+  .tl-dot-gray{background:var(--bg3);border:1px solid var(--border2);color:var(--text3);}
+  .tl-dot-red{background:rgba(255,77,106,0.12);border:1px solid rgba(255,77,106,0.25);color:var(--danger);}
+  .tl-line{width:1px;flex:1;background:var(--border);margin:4px 0;}
+  .tl-content{flex:1;padding-top:4px;}
+  .tl-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+  .tl-detail{font-size:11px;color:var(--text2);font-family:var(--mono);}
+  .tl-time{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px;}
+
+  /* Agent results */
+  .agents-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px;}
+  .agent-result{background:var(--bg3);border-radius:12px;padding:18px;border:1px solid var(--border);}
+  .agent-result.pass{border-color:rgba(0,212,170,0.2);}
+  .agent-result.fail{border-color:rgba(255,77,106,0.2);}
+  .ar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .ar-name{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);}
+  .ar-type{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;}
+  .ar-verdict{font-family:var(--mono);font-size:13px;font-weight:700;}
+  .verdict-pass{color:var(--green);}
+  .verdict-fail{color:var(--danger);}
+  .ar-score-bar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:14px;}
+  .ar-score-fill{height:100%;border-radius:3px;}
+  .fill-green{background:var(--accent);}
+  .fill-red{background:var(--danger);}
+  .fill-warn{background:var(--warn);}
+  .ar-checks{display:flex;flex-direction:column;gap:7px;}
+  .check-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .check-label{font-size:11px;color:var(--text2);font-family:var(--mono);}
+  .check-val{font-size:11px;font-family:var(--mono);font-weight:700;white-space:nowrap;}
+  .cv-pass{color:var(--green);}
+  .cv-fail{color:var(--danger);}
+  .cv-warn{color:var(--warn);}
+  .ar-note{margin-top:12px;padding:10px 12px;background:rgba(255,77,106,0.06);border-left:2px solid var(--danger);border-radius:0 6px 6px 0;font-size:11px;color:var(--text2);font-family:var(--mono);}
+  .ar-note-green{background:rgba(0,212,170,0.06);border-left-color:var(--green);}
+
+  /* Blockchain record */
+  .chain-record{padding:20px;}
+  .chain-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .chain-field{background:var(--bg3);border-radius:8px;padding:12px 14px;border:1px solid var(--border);}
+  .cf-label{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+  .cf-value{font-size:12px;font-family:var(--mono);color:var(--text);word-break:break-all;}
+  .cf-value.hash{color:var(--accent2);}
+  .cf-value.green{color:var(--green);}
+  .cf-value.warn{color:var(--warn);}
+  .chain-raw{background:var(--bg3);border-radius:8px;padding:14px;border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.7;overflow-x:auto;}
+  .chain-raw .key{color:var(--accent2);}
+  .chain-raw .val{color:var(--text);}
+  .chain-raw .val-green{color:var(--green);}
+  .chain-raw .val-red{color:var(--danger);}
+  .chain-raw .val-num{color:var(--warn);}
+
+  /* Documents */
+  .docs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:20px;}
+  .doc-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;}
+  .doc-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+  .doc-icon-lg{font-size:28px;margin-bottom:10px;}
+  .doc-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;}
+  .doc-meta{font-size:10px;color:var(--text2);font-family:var(--mono);line-height:1.6;}
+  .doc-status{margin-top:10px;}
+
+  /* Escrow panel */
+  .escrow-body{padding:20px;}
+  .escrow-visual{display:flex;align-items:center;gap:0;margin-bottom:24px;}
+  .escrow-party{text-align:center;flex:1;}
+  .ep-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;}
+  .ep-name{font-size:12px;font-weight:600;color:var(--text);}
+  .ep-role{font-size:10px;color:var(--text3);font-family:var(--mono);}
+  .escrow-flow{flex:2;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .ef-amount{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);}
+  .ef-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+  .ef-arrow{font-size:22px;color:var(--accent);margin-top:4px;}
+  .ef-status-pill{padding:4px 14px;border-radius:20px;font-size:11px;font-family:var(--mono);font-weight:700;}
+  .pill-released{background:rgba(0,212,170,0.1);color:var(--green);border:1px solid rgba(0,212,170,0.2);}
+  .pill-held{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.2);}
+  .escrow-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .eb-item{background:var(--bg3);border-radius:8px;padding:12px;border:1px solid var(--border);text-align:center;}
+  .eb-label{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:5px;}
+  .eb-val{font-size:14px;font-family:var(--mono);font-weight:600;}
+
+  /* Two col */
+  .two-col{display:grid;grid-template-columns:1fr 360px;gap:20px;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn 0.4s ease both;}
+  .fade-in-1{animation-delay:0.05s}
+  .fade-in-2{animation-delay:0.1s}
+  .fade-in-3{animation-delay:0.15s}
+  .fade-in-4{animation-delay:0.2s}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" onclick="window.location.href='index.html'">TrustTrade</div>
+      <div class="logo-sub">v0.1 · Base Testnet</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">◈</span> Dashboard</div>
+      <div class="nav-item active" onclick="window.location.href='trades.html'"><span class="nav-icon">⬡</span> All Trades</div>
+      <div class="nav-item" onclick="window.location.href='flagged.html'">
+        <span class="nav-icon">⚑</span> Flagged
+        <span id="nav-flag-count" style="margin-left:auto;background:rgba(255,77,106,0.15);color:var(--danger);font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:10px;">2</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Actions</div>
+
+      <div class="nav-item" onclick="window.location.href='submit.html'"><span class="nav-icon">＋</span> Create Trade</div>
+      <div class="nav-item" onclick="window.location.href='escrow.html'"><span class="nav-icon">◎</span> Deposit Escrow</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="window.location.href='explorer.html'"><span class="nav-icon">⬡</span> Block Explorer</div>
+      <div class="nav-item" onclick="window.location.href='agents.html'"><span class="nav-icon">⚙</span> AI Agents</div>
+    </div>
+    <div class="sidebar-footer">
+          <div id="sidebar-user-badge" style="padding:12px 16px 0;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131b26;border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:default;">
+        <div class="suf-avatar" style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#00d4aa;flex-shrink:0;">??</div>
+        <div style="flex:1;min-width:0;">
+          <div class="suf-name" style="font-size:12px;font-weight:600;color:#e8edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
+          <div class="suf-role" style="font-size:9px;color:#4a5668;font-family:'Space Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        </div>
+        <div title="Sign out" onclick="TrustAuth.logout()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button onclick="connectWallet()" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#090d12;font-size:13px;font-weight:600;border:none;cursor:pointer;">Connect Wallet</button>
+      <span id="wallet-status" style="display:block;margin-top:5px;font-size:11px;color:var(--text3);text-align:center;">Not connected</span>
+    </div>
+    <div class="chain-badge"><div class="chain-dot"></div>Base Testnet · Block #4,821,107</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="index.html">Dashboard</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href="trades.html">All Trades</a>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">TRD-046</span>
+    </div>
+
+    <!-- Trade header -->
+    <div class="trade-header fade-in">
+      <div class="trade-id-block">
+        <div class="trade-id-label">Trade ID</div>
+        <div class="trade-id-value">TRD-046</div>
+        <div class="trade-product-name">Textile Goods — Bulk Export</div>
+        <div class="trade-parties-row">
+          <div class="party-chip">🏭 Mumbai Mills Ltd.</div>
+          <div class="arrow-chip">→</div>
+          <div class="party-chip">📦 Hamburg Co. GmbH</div>
+        </div>
+      </div>
+      <div class="trade-header-right">
+        <span class="badge badge-verified"><span class="badge-dot"></span> VERIFIED</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost">⬡ View on Base</button>
+          <button class="btn btn-ghost">↓ Export PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip fade-in fade-in-1">
+      <div class="stat-card">
+        <div class="stat-label">Escrow Amount</div>
+        <div class="stat-value" style="color:var(--green)">$11,500</div>
+        <div class="stat-sub">USDC · Released</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Created</div>
+        <div class="stat-value" style="font-size:14px;padding-top:4px;color:var(--text)">Mar 10, 2026</div>
+        <div class="stat-sub">14:22 UTC</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Verified</div>
+        <div class="stat-value" style="font-size:14px;padding-top:4px;color:var(--text)">Mar 13, 2026</div>
+        <div class="stat-sub">09:38 UTC · 3 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI Confidence</div>
+        <div class="stat-value" style="color:var(--green)">96%</div>
+        <div class="stat-sub">Both agents passed</div>
+      </div>
+    </div>
+
+    <!-- Top two-col: Timeline + Escrow -->
+    <div class="two-col fade-in fade-in-2">
+
+      <!-- Timeline -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">◎ Trade Timeline</div>
+          <div class="panel-action">Full log →</div>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="tl-left">
+              <div class="tl-dot tl-dot-blue">＋</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Trade created on Base testnet</div>
+              <div class="tl-detail">TX: 0x4f8a2c...d391 · Block #4,820,441</div>
+              <div class="tl-time">Mar 10, 2026 · 14:22 UTC</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-left">
+              <div class="tl-dot tl-dot-warn">$</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Escrow deposited — $11,500 USDC</div>
+              <div class="tl-detail">Hamburg Co. GmbH · TX: 0x7b3e9f...a220</div>
+              <div class="tl-time">Mar 10, 2026 · 15:07 UTC</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-left">
+              <div class="tl-dot tl-dot-blue">↑</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Documents submitted by manufacturer</div>
+              <div class="tl-detail">3 files · 8.4 MB total · IPFS pinned</div>
+              <div class="tl-time">Mar 12, 2026 · 10:14 UTC</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-left">
+              <div class="tl-dot tl-dot-blue">⚙</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">AI verification triggered</div>
+              <div class="tl-detail">Agent 1 + Agent 2 running in parallel</div>
+              <div class="tl-time">Mar 13, 2026 · 09:35 UTC</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-left">
+              <div class="tl-dot tl-dot-green">✓</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Both agents passed — trade verified</div>
+              <div class="tl-detail">Confidence: 96% · No anomalies detected</div>
+              <div class="tl-time">Mar 13, 2026 · 09:38 UTC</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-left">
+              <div class="tl-dot tl-dot-green">⬡</div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-title">Escrow auto-released by smart contract</div>
+              <div class="tl-detail">$11,500 USDC → Mumbai Mills Ltd. · TX: 0x9c1d4b...f882</div>
+              <div class="tl-time">Mar 13, 2026 · 09:38 UTC</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escrow panel -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">$ Escrow Status</div>
+            <span class="badge badge-verified" style="font-size:10px;padding:3px 10px;"><span class="badge-dot"></span>RELEASED</span>
+          </div>
+          <div class="escrow-body">
+            <div class="escrow-visual">
+              <div class="escrow-party">
+                <div class="ep-icon" style="background:rgba(0,153,255,0.1);">📦</div>
+                <div class="ep-name">Hamburg Co.</div>
+                <div class="ep-role">BUYER</div>
+              </div>
+              <div class="escrow-flow">
+                <div class="ef-amount">$11,500</div>
+                <div class="ef-label">USDC</div>
+                <div class="ef-arrow">→</div>
+                <div class="ef-status-pill pill-released">RELEASED</div>
+              </div>
+              <div class="escrow-party">
+                <div class="ep-icon" style="background:rgba(0,212,170,0.1);">🏭</div>
+                <div class="ep-name">Mumbai Mills</div>
+                <div class="ep-role">SELLER</div>
+              </div>
+            </div>
+            <div class="escrow-breakdown">
+              <div class="eb-item">
+                <div class="eb-label">Principal</div>
+                <div class="eb-val" style="color:var(--text)">$11,500</div>
+              </div>
+              <div class="eb-item">
+                <div class="eb-label">Platform fee</div>
+                <div class="eb-val" style="color:var(--warn)">$57.50</div>
+              </div>
+              <div class="eb-item">
+                <div class="eb-label">Released</div>
+                <div class="eb-val" style="color:var(--green)">$11,442</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">⬡ On-chain Data</div>
+            <div class="panel-action">Explorer →</div>
+          </div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text3);font-family:var(--mono)">Contract</span>
+              <span style="color:var(--accent2);font-family:var(--mono);font-size:11px;">0x1E14905E3853B55a34BF69c13cF02464628d0E66</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text3);font-family:var(--mono)">Network</span>
+              <span style="color:var(--text);font-family:var(--mono)">Base Testnet</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text3);font-family:var(--mono)">Confirmations</span>
+              <span style="color:var(--green);font-family:var(--mono)">142</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text3);font-family:var(--mono)">Gas used</span>
+              <span style="color:var(--text);font-family:var(--mono)">84,210</span>
+            </div>
+            <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text3);font-family:var(--mono)">Finality</span>
+              <span style="color:var(--green);font-family:var(--mono)">FINAL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Agent Results -->
+    <div class="panel fade-in fade-in-3">
+      <div class="panel-header">
+        <div class="panel-title">⚙ AI Verification Results</div>
+        <div class="panel-action">Re-run agents →</div>
+      </div>
+      <div class="agents-grid">
+        <!-- Agent 1 -->
+        <div class="agent-result pass">
+          <div class="ar-header">
+            <div>
+              <div class="ar-name">Agent 1 — Verification</div>
+              <div class="ar-type">Data AI · Invoice + quantity analysis</div>
+            </div>
+            <div class="ar-verdict verdict-pass">✓ PASS</div>
+          </div>
+          <div class="ar-score-bar"><div class="ar-score-fill fill-green" style="width:98%"></div></div>
+          <div class="ar-checks">
+            <div class="check-row"><span class="check-label">Invoice number format</span><span class="check-val cv-pass">✓ VALID</span></div>
+            <div class="check-row"><span class="check-label">Product ID match</span><span class="check-val cv-pass">✓ MATCH</span></div>
+            <div class="check-row"><span class="check-label">Quantity reconciliation</span><span class="check-val cv-pass">✓ 2,400 units</span></div>
+            <div class="check-row"><span class="check-label">Price per unit check</span><span class="check-val cv-pass">✓ $4.79/unit</span></div>
+            <div class="check-row"><span class="check-label">Duplicate invoice ID</span><span class="check-val cv-pass">✓ NONE</span></div>
+            <div class="check-row"><span class="check-label">Anomaly score</span><span class="check-val cv-pass">0.02 / 1.0</span></div>
+          </div>
+          <div class="ar-note ar-note-green">All data fields cross-referenced against trade record. No discrepancies found. Confidence: 98%.</div>
+        </div>
+
+        <!-- Agent 2 -->
+        <div class="agent-result pass">
+          <div class="ar-header">
+            <div>
+              <div class="ar-name">Agent 2 — Document</div>
+              <div class="ar-type">Visual AI · OCR + format validation</div>
+            </div>
+            <div class="ar-verdict verdict-pass">✓ PASS</div>
+          </div>
+          <div class="ar-score-bar"><div class="ar-score-fill fill-green" style="width:94%"></div></div>
+          <div class="ar-checks">
+            <div class="check-row"><span class="check-label">OCR text extraction</span><span class="check-val cv-pass">✓ CLEAN</span></div>
+            <div class="check-row"><span class="check-label">Document hash match</span><span class="check-val cv-pass">✓ 0x7f3a...c912</span></div>
+            <div class="check-row"><span class="check-label">Stamp authentication</span><span class="check-val cv-pass">✓ AUTHENTIC</span></div>
+            <div class="check-row"><span class="check-label">Signature verification</span><span class="check-val cv-pass">✓ VALID</span></div>
+            <div class="check-row"><span class="check-label">Format consistency</span><span class="check-val cv-pass">✓ ISO 9001</span></div>
+            <div class="check-row"><span class="check-label">Tampering indicators</span><span class="check-val cv-pass">✓ NONE</span></div>
+          </div>
+          <div class="ar-note ar-note-green">Document integrity confirmed. Hash matches original submission. All visual checks passed. Confidence: 94%.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents submitted -->
+    <div class="panel fade-in fade-in-4">
+      <div class="panel-header">
+        <div class="panel-title">↑ Submitted Documents</div>
+        <div class="panel-action">Download all →</div>
+      </div>
+      <div class="docs-grid">
+        <div class="doc-card" onclick="previewDoc('invoice')">
+          <div class="doc-icon-lg">📄</div>
+          <div class="doc-name">Commercial Invoice</div>
+          <div class="doc-meta">
+            INV-2026-MML-0392<br>
+            Hash: 0x7f3a...c912<br>
+            Size: 2.1 MB · PDF<br>
+            Uploaded: Mar 12, 09:14
+          </div>
+          <div class="doc-status">
+            <span class="badge badge-verified" style="font-size:10px;padding:3px 10px;"><span class="badge-dot"></span>VERIFIED</span>
+          </div>
+        </div>
+        <div class="doc-card" onclick="previewDoc('bill')">
+          <div class="doc-icon-lg">🚢</div>
+          <div class="doc-name">Bill of Lading</div>
+          <div class="doc-meta">
+            BOL-MUM-HAM-20260312<br>
+            Hash: 0xaa12...8f44<br>
+            Size: 1.8 MB · PDF<br>
+            Uploaded: Mar 12, 09:17
+          </div>
+          <div class="doc-status">
+            <span class="badge badge-verified" style="font-size:10px;padding:3px 10px;"><span class="badge-dot"></span>VERIFIED</span>
+          </div>
+        </div>
+        <div class="doc-card" onclick="previewDoc('cert')">
+          <div class="doc-icon-lg">📋</div>
+          <div class="doc-name">Certificate of Origin</div>
+          <div class="doc-meta">
+            COO-IN-2026-44821<br>
+            Hash: 0xc309...2b71<br>
+            Size: 0.9 MB · PDF<br>
+            Uploaded: Mar 12, 09:21
+          </div>
+          <div class="doc-status">
+            <span class="badge badge-verified" style="font-size:10px;padding:3px 10px;"><span class="badge-dot"></span>VERIFIED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw blockchain record -->
+    <div class="panel fade-in fade-in-4">
+      <div class="panel-header">
+        <div class="panel-title">⬡ Raw Blockchain Record</div>
+        <div class="panel-action" onclick="toggleRaw()">Toggle →</div>
+      </div>
+      <div class="chain-record" id="chain-raw-block">
+        <div class="chain-grid">
+          <div class="chain-field">
+            <div class="cf-label">Transaction Hash</div>
+            <div class="cf-value hash">0x9c1d4b8e2f3a7c5d...f882</div>
+          </div>
+          <div class="chain-field">
+            <div class="cf-label">Block Number</div>
+            <div class="cf-value">#4,821,093</div>
+          </div>
+          <div class="chain-field">
+            <div class="cf-label">Smart Contract</div>
+            <div class="cf-value hash">0x3a9b1c7f2d8e4a...c441</div>
+          </div>
+          <div class="chain-field">
+            <div class="cf-label">Escrow Status</div>
+            <div class="cf-value green">RELEASED</div>
+          </div>
+          <div class="chain-field">
+            <div class="cf-label">Network</div>
+            <div class="cf-value">Base Testnet (Chain ID: 84532)</div>
+          </div>
+          <div class="chain-field">
+            <div class="cf-label">Timestamp</div>
+            <div class="cf-value">2026-03-13T09:38:22Z</div>
+          </div>
+        </div>
+        <div class="chain-raw" id="raw-json" style="display:none">
+<span class="key">{</span>
+  <span class="key">"tradeId"</span>: <span class="val">"TRD-046"</span>,
+  <span class="key">"manufacturer"</span>: <span class="val">"Mumbai Mills Ltd."</span>,
+  <span class="key">"buyer"</span>: <span class="val">"Hamburg Co. GmbH"</span>,
+  <span class="key">"product"</span>: <span class="val">"Textile Goods — Bulk Export"</span>,
+  <span class="key">"quantity"</span>: <span class="val-num">2400</span>,
+  <span class="key">"escrowAmount"</span>: <span class="val-num">11500</span>,
+  <span class="key">"currency"</span>: <span class="val">"USDC"</span>,
+  <span class="key">"agent1Result"</span>: <span class="val-green">"PASS"</span>,
+  <span class="key">"agent2Result"</span>: <span class="val-green">"PASS"</span>,
+  <span class="key">"aiConfidence"</span>: <span class="val-num">0.96</span>,
+  <span class="key">"verificationHash"</span>: <span class="val">"0x7f3ac912..."</span>,
+  <span class="key">"escrowStatus"</span>: <span class="val-green">"RELEASED"</span>,
+  <span class="key">"releasedTo"</span>: <span class="val">"0xMumbaiMills...wallet"</span>,
+  <span class="key">"timestamp"</span>: <span class="val-num">1741859902</span>,
+  <span class="key">"blockNumber"</span>: <span class="val-num">4821093</span>,
+  <span class="key">"immutable"</span>: <span class="val-green">true</span>
+<span class="key">}</span>
+        </div>
+        <button class="btn btn-ghost" id="raw-btn" onclick="toggleRaw()" style="margin-top:12px;width:100%;justify-content:center;">Show raw JSON ↓</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Doc preview modal -->
+<div id="doc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px;width:500px;max-width:90vw;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:15px;font-weight:600;" id="modal-doc-title">Document Preview</div>
+      <div onclick="closeDocModal()" style="cursor:pointer;color:var(--text2);font-size:18px;">✕</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:10px;height:220px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);margin-bottom:16px;">
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:10px;" id="modal-doc-icon">📄</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--text2);" id="modal-doc-name">—</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;">Document preview (demo mode)</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeDocModal()" class="btn btn-ghost" style="flex:1">Close</button>
+      <button class="btn btn-primary" style="flex:1">↓ Download</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="engine.js"></script>
+<script>
+  // Update flagged nav badge from live data
+  const _badge = document.getElementById('nav-flag-count');
+  if(_badge) _badge.textContent = TrustTrade.getStats().flagged;
+
+  let rawVisible = false;
+  function toggleRaw() {
+    rawVisible = !rawVisible;
+    document.getElementById('raw-json').style.display = rawVisible ? 'block' : 'none';
+    document.getElementById('raw-btn').textContent = rawVisible ? 'Hide raw JSON ↑' : 'Show raw JSON ↓';
+  }
+
+  const docMeta = {
+    invoice: { title: 'Commercial Invoice', icon: '📄', name: 'INV-2026-MML-0392.pdf' },
+    bill: { title: 'Bill of Lading', icon: '🚢', name: 'BOL-MUM-HAM-20260312.pdf' },
+    cert: { title: 'Certificate of Origin', icon: '📋', name: 'COO-IN-2026-44821.pdf' },
+  };
+  function previewDoc(type) {
+    const d = docMeta[type];
+    document.getElementById('modal-doc-title').textContent = d.title;
+    document.getElementById('modal-doc-icon').textContent = d.icon;
+    document.getElementById('modal-doc-name').textContent = d.name;
+    document.getElementById('doc-modal').style.display = 'flex';
+  }
+  function closeDocModal() {
+    document.getElementById('doc-modal').style.display = 'none';
+  }
+</script>
+<script src="auth.js"></script>
+<script>
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  TrustAuth.requireAuth();
+
+  // ── Populate sidebar user badge ─────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const u = TrustAuth.currentUser();
+    if (!u) return;
+    const el = document.getElementById('sidebar-user-badge');
+    if (!el) return;
+    el.querySelector('.suf-avatar').textContent  = u.avatar || u.name.slice(0,2).toUpperCase();
+    el.querySelector('.suf-name').textContent    = u.name;
+    el.querySelector('.suf-role').textContent    = u.role + ' · ' + u.company;
+  });
+
+  async function connectWallet() {
+    const ok = await TrustChain.connect();
+    document.getElementById('wallet-status').textContent = 
+      ok ? '✅ Connected to Base Sepolia' : '❌ Wrong network or no wallet';
+  }
+</script>
+</body>
+</html>

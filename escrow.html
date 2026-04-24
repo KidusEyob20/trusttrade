@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Deposit Escrow — TrustTrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#090d12;--bg2:#0e1420;--bg3:#131b26;--bg4:#1a2333;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#e8edf5;--text2:#7a8a9e;--text3:#4a5668;--accent:#00d4aa;--accent2:#0099ff;--danger:#ff4d6a;--warn:#ffaa00;--green:#00d4aa;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,170,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(0,212,170,0.06);top:-100px;right:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(0,153,255,0.05);bottom:-100px;left:-80px;}
+  .shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .logo-mark{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+  .nav-section{padding:0 12px;margin-bottom:24px;}
+  .nav-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:0 8px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all 0.15s;border:1px solid transparent;margin-bottom:2px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(0,212,170,0.08);border-color:rgba(0,212,170,0.2);color:var(--accent);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+  .chain-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .chain-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+
+  /* Main */
+  .main{flex:1;padding:32px 36px;overflow-y:auto;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn 0.35s ease both;}
+  .fade-in-2{animation-delay:0.07s;}
+  .fade-in-3{animation-delay:0.14s;}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:var(--sans);}
+  .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+  .btn-ghost:hover{background:var(--bg3);color:var(--text);}
+  .btn-primary{background:var(--accent);color:#000;font-weight:600;}
+  .btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+  .btn-full{width:100%;justify-content:center;}
+
+  /* Layout */
+  .page-layout{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;}
+
+  /* Panel */
+  .panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+  .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .panel-body{padding:20px;}
+
+  /* Form fields */
+  .field{margin-bottom:16px;}
+  label{display:block;font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+  input[type=text],input[type=number],select{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color 0.15s;appearance:none;}
+  input:focus,select:focus{border-color:rgba(0,212,170,0.4);}
+  input::placeholder{color:var(--text3);}
+  select option{background:var(--bg2);}
+
+  /* Trade selector */
+  .trade-select-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto;}
+  .trade-opt{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.15s;}
+  .trade-opt:hover{border-color:var(--border2);}
+  .trade-opt.selected{border-color:rgba(0,212,170,0.4);background:rgba(0,212,170,0.05);}
+  .to-left{}
+  .to-id{font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:3px;}
+  .to-name{font-size:13px;font-weight:500;color:var(--text);}
+  .to-parties{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+  .to-right{text-align:right;}
+  .to-amount{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);}
+  .to-status{font-size:10px;font-family:var(--mono);color:var(--warn);margin-top:3px;}
+
+  /* Amount display */
+  .amount-display{text-align:center;padding:28px 20px;background:var(--bg3);border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
+  .ad-label{font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+  .ad-value{font-size:36px;font-weight:700;font-family:var(--mono);color:var(--accent);}
+  .ad-unit{font-size:14px;color:var(--text2);margin-top:4px;font-family:var(--mono);}
+
+  /* Fee rows */
+  .fee-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono);}
+  .fee-row:last-child{border-bottom:none;}
+  .fee-key{color:var(--text2);}
+  .fee-val{color:var(--text);}
+  .fee-val.green{color:var(--green);font-weight:700;}
+  .fee-val.warn{color:var(--warn);}
+
+  /* Contract info */
+  .contract-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono);}
+  .contract-row:last-child{border-bottom:none;}
+  .cr-key{color:var(--text3);}
+  .cr-val{color:var(--text2);}
+  .cr-val.accent{color:var(--accent);}
+  .cr-val.accent2{color:var(--accent2);}
+
+  /* Info box */
+  .info-box{background:rgba(0,153,255,0.05);border:1px solid rgba(0,153,255,0.15);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px;}
+  .info-box .ib-title{font-family:var(--mono);font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:6px;}
+
+  /* Steps indicator */
+  .how-steps{display:flex;flex-direction:column;gap:0;}
+  .how-step{display:flex;gap:14px;padding:12px 0;}
+  .hs-line{display:flex;flex-direction:column;align-items:center;}
+  .hs-dot{width:28px;height:28px;border-radius:50%;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+  .hs-connector{width:1px;flex:1;background:var(--border);margin:4px 0;}
+  .hs-content{}
+  .hs-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+  .hs-sub{font-size:11px;color:var(--text3);font-family:var(--mono);}
+
+  /* Success overlay */
+  .success-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;}
+  .success-card{background:var(--bg2);border:1px solid rgba(0,212,170,0.3);border-radius:20px;padding:40px;width:460px;max-width:90vw;text-align:center;}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" onclick="window.location.href='index.html'">TrustTrade</div>
+      <div class="logo-sub">v0.1 · Base Testnet</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">◈</span> Dashboard</div>
+      <div class="nav-item" onclick="window.location.href='trades.html'"><span class="nav-icon">⬡</span> All Trades</div>
+      <div class="nav-item" onclick="window.location.href='flagged.html'"><span class="nav-icon">⚑</span> Flagged<span id="nav-flag-count" style="margin-left:auto;background:rgba(255,77,106,0.15);color:var(--danger);font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:10px;">2</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Actions</div>
+
+      <div class="nav-item" onclick="window.location.href='submit.html'"><span class="nav-icon">＋</span> Create Trade</div>
+      <div class="nav-item active"><span class="nav-icon">◎</span> Deposit Escrow</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="window.location.href='explorer.html'"><span class="nav-icon">⬡</span> Block Explorer</div>
+      <div class="nav-item" onclick="window.location.href='agents.html'"><span class="nav-icon">⚙</span> AI Agents</div>
+      <div class="nav-item" onclick="window.location.href='profile.html'"><span class="nav-icon">👤</span> Profile</div>
+    </div>
+    <div class="sidebar-footer">
+          <div id="sidebar-user-badge" style="padding:12px 16px 0;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131b26;border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:default;">
+        <div class="suf-avatar" style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#00d4aa;flex-shrink:0;">??</div>
+        <div style="flex:1;min-width:0;">
+          <div class="suf-name" style="font-size:12px;font-weight:600;color:#e8edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
+          <div class="suf-role" style="font-size:9px;color:#4a5668;font-family:'Space Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        </div>
+        <div title="Sign out" onclick="TrustAuth.logoutUser()" style="cursor:pointer;color:#4a5668;font-size:13px;padding:3px 5px;border-radius:5px;transition:all 0.15s;flex-shrink:0;" onmouseover="this.style.color='#ff4d6a';this.style.background='rgba(255,77,106,0.1)'" onmouseout="this.style.color='#4a5668';this.style.background='transparent'">⏻</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button onclick="connectWallet()" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#090d12;font-size:13px;font-weight:600;border:none;cursor:pointer;">Connect Wallet</button>
+      <span id="wallet-status" style="display:block;margin-top:5px;font-size:11px;color:var(--text3);text-align:center;">Not connected</span>
+    </div>
+    <div class="chain-badge"><div class="chain-dot"></div>Base Testnet · Block #4,821,107</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;" class="fade-in">
+      <div>
+        <div style="font-size:22px;font-weight:600;">◎ Deposit Escrow</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px;font-family:var(--mono);">Lock USDC into the Base testnet smart contract</div>
+      </div>
+      <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Back to dashboard</button>
+    </div>
+
+    <div class="page-layout">
+
+      <!-- Left: form -->
+      <div>
+
+        <!-- Step 1: Select trade -->
+        <div class="panel fade-in fade-in-2">
+          <div class="panel-header">⬡ Step 1 — Select a pending trade</div>
+          <div class="panel-body">
+            <p style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:14px;">Choose the trade you want to lock escrow for. Only trades with Pending status are eligible.</p>
+            <div class="trade-select-list" id="trade-list">
+              <div style="font-family:var(--mono);font-size:12px;color:var(--text3);text-align:center;padding:20px;">Loading trades...</div>
+            </div>
+            <div id="no-pending" style="display:none;text-align:center;padding:24px;">
+              <div style="font-size:24px;margin-bottom:10px;">◌</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;">No pending trades</div>
+              <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">Create a new trade first, then come back to deposit escrow.</div>
+              <button class="btn btn-primary" style="margin-top:16px;" onclick="window.location.href='index.html'">＋ Create Trade</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Escrow amount -->
+        <div class="panel fade-in fade-in-3" id="step2-panel" style="opacity:0.4;pointer-events:none;">
+          <div class="panel-header">$ Step 2 — Confirm escrow amount</div>
+          <div class="panel-body">
+            <div class="amount-display" id="amount-display">
+              <div class="ad-label">Escrow to lock</div>
+              <div class="ad-value" id="ad-value">$0</div>
+              <div class="ad-unit">USDC · Base Testnet</div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div class="fee-row"><span class="fee-key">Principal amount</span><span class="fee-val" id="fee-principal">$0.00</span></div>
+              <div class="fee-row"><span class="fee-key">Platform fee (0.5%)</span><span class="fee-val warn" id="fee-platform">$0.00</span></div>
+              <div class="fee-row"><span class="fee-key">Gas estimate</span><span class="fee-val">~$0.02 USDC</span></div>
+              <div class="fee-row" style="border-top:1px solid var(--border2);margin-top:4px;padding-top:12px;"><span class="fee-key" style="font-weight:600;color:var(--text);">Seller receives</span><span class="fee-val green" id="fee-seller">$0.00</span></div>
+            </div>
+
+            <div class="field">
+              <label>Buyer wallet address</label>
+              <input type="text" id="wallet-buyer" placeholder="0x... (buyer locks the funds)" oninput="validateWallets()"/>
+            </div>
+            <div class="field">
+              <label>Seller wallet address</label>
+              <input type="text" id="wallet-seller" placeholder="0x... (receives funds on verification)" oninput="validateWallets()"/>
+            </div>
+
+            <div class="info-box">
+              <div class="ib-title">ℹ How escrow works</div>
+              Funds are locked in the TrustTrade smart contract on Base testnet. They are held until both AI agents verify the trade documents. If verification passes, USDC is automatically released to the seller. If it fails, funds remain held pending manual review.
+            </div>
+
+            <button class="btn btn-primary btn-full" id="deposit-btn" onclick="depositEscrow()" style="opacity:0.5;pointer-events:none;">
+              ⬡ Lock Escrow on Base Testnet
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: info sidebar -->
+      <div>
+
+        <!-- Contract info -->
+        <div class="panel fade-in fade-in-2">
+          <div class="panel-header">⬡ Smart contract</div>
+          <div class="panel-body">
+            <div class="contract-row"><span class="cr-key">Network</span><span class="cr-val accent">Base Testnet</span></div>
+            <div class="contract-row"><span class="cr-key">Chain ID</span><span class="cr-val">84532</span></div>
+            <div class="contract-row"><span class="cr-key">Contract</span><span class="cr-val accent2">0x1E14905E3853B55a34BF69c13cF02464628d0E66</span></div>
+            <div class="contract-row"><span class="cr-key">Token</span><span class="cr-val">USDC (Base)</span></div>
+            <div class="contract-row"><span class="cr-key">Avg gas</span><span class="cr-val">~72,000</span></div>
+            <div class="contract-row"><span class="cr-key">Avg block time</span><span class="cr-val">~2 seconds</span></div>
+          </div>
+        </div>
+
+        <!-- How it works steps -->
+        <div class="panel fade-in fade-in-3">
+          <div class="panel-header">How it works</div>
+          <div class="panel-body" style="padding-top:8px;">
+            <div class="how-steps">
+              <div class="how-step">
+                <div class="hs-line"><div class="hs-dot">1</div><div class="hs-connector"></div></div>
+                <div class="hs-content"><div class="hs-title">Select trade</div><div class="hs-sub">Pick a pending trade to fund</div></div>
+              </div>
+              <div class="how-step">
+                <div class="hs-line"><div class="hs-dot">2</div><div class="hs-connector"></div></div>
+                <div class="hs-content"><div class="hs-title">Lock escrow</div><div class="hs-sub">USDC locked in smart contract</div></div>
+              </div>
+              <div class="how-step">
+                <div class="hs-line"><div class="hs-dot">3</div><div class="hs-connector"></div></div>
+                <div class="hs-content"><div class="hs-title">AI verification</div><div class="hs-sub">Both agents check the documents</div></div>
+              </div>
+              <div class="how-step">
+                <div class="hs-line"><div class="hs-dot" style="background:rgba(0,212,170,0.2);border-color:rgba(0,212,170,0.5);">✓</div></div>
+                <div class="hs-content"><div class="hs-title">Auto-release</div><div class="hs-sub">Funds released to seller on pass</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Escrow pool stats -->
+        <div class="panel fade-in fade-in-3">
+          <div class="panel-header">Escrow pool</div>
+          <div class="panel-body">
+            <div class="contract-row"><span class="cr-key">Total locked</span><span class="cr-val accent" id="pool-locked">$0</span></div>
+            <div class="contract-row"><span class="cr-key">Pending trades</span><span class="cr-val" id="pool-pending">0</span></div>
+            <div class="contract-row"><span class="cr-key">Released (30d)</span><span class="cr-val" id="pool-released">$0</span></div>
+            <div class="contract-row"><span class="cr-key">Held (flagged)</span><span class="cr-val" style="color:var(--warn)" id="pool-held">$0</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-card">
+    <div style="font-size:52px;margin-bottom:16px;">🔒</div>
+    <div style="font-size:20px;font-weight:600;color:var(--green);margin-bottom:8px;">Escrow Locked!</div>
+    <div style="font-size:13px;color:var(--text2);font-family:var(--mono);margin-bottom:24px;" id="success-msg">USDC locked on Base testnet</div>
+    <div style="background:var(--bg3);border-radius:10px;padding:16px;text-align:left;margin-bottom:24px;border:1px solid var(--border);">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Trade ID</span><span style="color:var(--accent2)" id="s-trade-id">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Amount locked</span><span style="color:var(--accent)" id="s-amount">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">TX Hash</span><span style="color:var(--accent2)" id="s-tx">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Block</span><span id="s-block">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;"><span style="color:var(--text3)">Status</span><span style="color:var(--green);font-weight:700;">LOCKED</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="window.location.href='trades.html'">View all trades</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="window.location.href='index.html'">Back to dashboard</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="engine.js"></script>
+<script>
+let selectedTrade = null;
+
+// Update flagged badge
+const _badge = document.getElementById('nav-flag-count');
+if(_badge) _badge.textContent = TrustTrade.getStats().flagged;
+
+function loadEscrowStats() {
+  const s = TrustTrade.getStats();
+  const trades = TrustTrade.storage.getTrades();
+  const released = trades.filter(t => t.status === 'verified').reduce((sum, t) => sum + t.escrow, 0);
+  const held = trades.filter(t => t.status === 'flagged').reduce((sum, t) => sum + t.escrow, 0);
+  const locked = trades.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.escrow, 0);
+
+  document.getElementById('pool-locked').textContent = '$' + locked.toLocaleString();
+  document.getElementById('pool-pending').textContent = s.pending;
+  document.getElementById('pool-released').textContent = '$' + released.toLocaleString();
+  document.getElementById('pool-held').textContent = '$' + held.toLocaleString();
+}
+
+function loadPendingTrades() {
+  const pending = TrustTrade.storage.getTrades().filter(t => t.status === 'pending');
+  const list = document.getElementById('trade-list');
+
+  if (pending.length === 0) {
+    list.style.display = 'none';
+    document.getElementById('no-pending').style.display = 'block';
+    return;
+  }
+
+  list.innerHTML = pending.map(t => `
+    <div class="trade-opt" id="opt-${t.id}" onclick="selectTrade('${t.id}')">
+      <div class="to-left">
+        <div class="to-id">${t.id}</div>
+        <div class="to-name">${t.product}</div>
+        <div class="to-parties">${t.manufacturer} → ${t.buyer}</div>
+      </div>
+      <div class="to-right">
+        <div class="to-amount">$${t.escrow.toLocaleString()}</div>
+        <div class="to-status">◌ PENDING</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectTrade(id) {
+  const trades = TrustTrade.storage.getTrades();
+  selectedTrade = trades.find(t => t.id === id);
+  if (!selectedTrade) return;
+
+  // Highlight selected
+  document.querySelectorAll('.trade-opt').forEach(el => el.classList.remove('selected'));
+  document.getElementById('opt-' + id).classList.add('selected');
+
+  // Enable step 2
+  const step2 = document.getElementById('step2-panel');
+  step2.style.opacity = '1';
+  step2.style.pointerEvents = 'auto';
+
+  // Fill in amounts
+  const escrow = selectedTrade.escrow;
+  const fee = escrow * 0.005;
+  document.getElementById('ad-value').textContent = '$' + escrow.toLocaleString();
+  document.getElementById('fee-principal').textContent = '$' + escrow.toFixed(2);
+  document.getElementById('fee-platform').textContent = '$' + fee.toFixed(2);
+  document.getElementById('fee-seller').textContent = '$' + (escrow - fee).toFixed(2);
+}
+
+function validateWallets() {
+  const buyer = document.getElementById('wallet-buyer').value.trim();
+  const seller = document.getElementById('wallet-seller').value.trim();
+  const btn = document.getElementById('deposit-btn');
+  const ready = selectedTrade && buyer.length > 5 && seller.length > 5;
+  btn.style.opacity = ready ? '1' : '0.5';
+  btn.style.pointerEvents = ready ? 'auto' : 'none';
+}
+
+async function depositEscrow() {
+  if (!selectedTrade) return;
+
+  const btn = document.getElementById('deposit-btn');
+  btn.innerHTML = '<div style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;"></div> Writing to Base Sepolia...';
+  btn.style.pointerEvents = 'none';
+
+  // Call real contract
+  const result = await TrustChain.submitTrade(selectedTrade);
+  const txHash = result?.txHash || TrustTrade.generateTxHash(selectedTrade.id, Date.now());
+  const blockNum = result?.blockNumber || TrustTrade.generateBlockNumber();
+  const onChain = !!result;
+
+  // Show success
+  document.getElementById('s-trade-id').textContent = selectedTrade.id;
+  document.getElementById('s-amount').textContent = '$' + selectedTrade.escrow.toLocaleString() + ' USDC';
+  const txEl = document.getElementById('s-tx');
+  if (onChain) {
+    txEl.innerHTML = `<a href="https://sepolia.basescan.org/tx/${txHash}" target="_blank" style="color:var(--accent2);text-decoration:none;">${txHash.slice(0,18)}...↗</a>`;
+  } else {
+    txEl.textContent = txHash;
+  }
+  document.getElementById('s-block').textContent = '#' + blockNum;
+  document.getElementById('success-msg').textContent =
+    onChain
+      ? `Trade ${selectedTrade.id} recorded on Base Sepolia ✅`
+      : `$${selectedTrade.escrow.toLocaleString()} USDC locked for ${selectedTrade.id} (demo mode)`;
+
+  document.getElementById('success-overlay').style.display = 'flex';
+}
+
+// Init
+loadEscrowStats();
+loadPendingTrades();
+</script>
+<script src="auth.js"></script>
+<script>
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  TrustAuth.requireAuth();
+
+  // ── Role-based UI setup ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = TrustAuth.currentUser();
+    if (!user) return;
+
+    // Populate sidebar user badge
+    const badgeEl = document.getElementById('sidebar-user-badge');
+    if (badgeEl) {
+      badgeEl.querySelector('.suf-avatar').textContent = user.avatar || user.name.slice(0,2).toUpperCase();
+      badgeEl.querySelector('.suf-name').textContent = user.name;
+      badgeEl.querySelector('.suf-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1) + ' · ' + user.company;
+    }
+
+    // Apply role-based visibility
+    applyRoleBasedVisibility(user);
+  });
+
+  function applyRoleBasedVisibility(user) {
+    // Navigation items visibility
+    const navItems = {
+      'nav-agents': document.querySelector('.nav-item[onclick*="agents.html"]'),
+      'nav-flagged': document.querySelector('.nav-item[onclick*="flagged.html"]'),
+      'create-trade-btn': document.querySelector('.nav-item[onclick*="submit.html"]'),
+      'escrow-deposit-btn': document.querySelector('.nav-item[onclick*="escrow.html"]'),
+      'explorer-link': document.querySelector('.nav-item[onclick*="explorer.html"]'),
+      'profile-link': document.querySelector('.nav-item[onclick*="profile.html"]')
+    };
+
+    Object.entries(navItems).forEach(([id, element]) => {
+      if (element && !TrustAuth.shouldShowComponent(id, user)) {
+        element.style.display = 'none';
+      }
+    });
+  }
+
+  async function connectWallet() {
+    const ok = await TrustChain.connect();
+    document.getElementById('wallet-status').textContent =
+      ok ? '✅ Connected to Base Sepolia' : '❌ Wrong network or no wallet';
+  }
+</script>
+</body>
+</html>
